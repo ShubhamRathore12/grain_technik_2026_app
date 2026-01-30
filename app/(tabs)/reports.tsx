@@ -171,7 +171,7 @@ export default function ReportsScreen() {
     fetchReports,
     clearReports,
   } = useDeviceReports();
-  
+
   // Separate function to fetch data with date range
   const fetchDataWithDateRange = async (tableName: string, startDate: Date, endDate: Date) => {
     try {
@@ -484,6 +484,11 @@ export default function ReportsScreen() {
       </View>
     );
   };
+
+  // Show loading screen while checking authentication
+  if (!data) {
+    return <LoadingScreen />;
+  }
 
   return (
     <ThemedView style={styles.container}>

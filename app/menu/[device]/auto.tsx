@@ -1,9 +1,10 @@
+import LoadingScreen from '@/components/loading-screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAutoData } from '@/hooks/use-auto-data';
 import { useI18n } from '@/i18n';
 import { useThemeMode } from '@/providers/theme';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import {
     Activity,
     ChevronLeft,
@@ -102,6 +103,7 @@ const machineConfig = {
             AHT: { key: "AHT_valve_speed", label: "After Heat(AHT)" },
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
+            AHT: { key: "AHT_valve_speed", label: "After Heat(AHT)" },
         },
         compressor: {
             time: "Compressor_timer",
@@ -121,6 +123,8 @@ const machineConfig = {
             AHT: { key: "AHT_vale_speed", label: "After Heat(AHT)" },
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
+            COND: { key: "Fan_speed", label: "Condenser Fan" },
+            HTR: { key: "Heater_speed", label: "Heater" },
         },
         compressor: {
             time: "Compressor_timer",
@@ -140,6 +144,8 @@ const machineConfig = {
             AHT: { key: "AHT_vale_speed", label: "After Heat(AHT)" },
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+            HTR: { key: "Heater_speed", label: "Heater" },
         },
         compressor: {
             time: "Compressor_timer",
@@ -159,6 +165,8 @@ const machineConfig = {
             AHT: { key: "AHT_vale_speed", label: "After Heat(AHT)" },
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+            HTR: { key: "Heater_speed", label: "Heater" },
         },
         compressor: {
             time: "Compressor_timer",
@@ -178,6 +186,8 @@ const machineConfig = {
             AHT: { key: "AHT_vale_speed", label: "After Heat(AHT)" },
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+            HTR: { key: "Heater_speed", label: "Heater" },
         },
         compressor: {
             time: "Compressor_timer",
@@ -197,6 +207,8 @@ const machineConfig = {
             AHT: { key: "AHT_vale_speed", label: "After Heat(AHT)" },
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+            HTR: { key: "Heater_speed", label: "Heater" },
         },
         compressor: {
             time: "Compressor_timer",
@@ -216,6 +228,8 @@ const machineConfig = {
             AHT: { key: "AHT_vale_speed", label: "After Heat(AHT)" },
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+            HTR: { key: "Heater_speed", label: "Heater" },
         },
         compressor: {
             time: "Compressor_timer",
@@ -233,6 +247,8 @@ const machineConfig = {
         controls: {
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
+
+            AHT: { key: "AHT_valve_speed", label: "After Heat(AHT)" },
         },
         compressor: {
             time: "Compressor_timer",
@@ -247,26 +263,50 @@ const machineConfig = {
     "GTPL-108-gT-40E-P-S7-200": {
         serialNumber: "GTPL_108",
         ...commonS7_200Config,
+        controls: {
+            ...commonS7_200Config.controls,
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+        },
     },
     "GTPL-109-gT-40E-P-S7-200": {
         serialNumber: "GTPL_109",
         ...commonS7_200Config,
+        controls: {
+            ...commonS7_200Config.controls,
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+        },
     },
     "GTPL-110-gT-40E-P-S7-200": {
         serialNumber: "GTPL_110",
         ...commonS7_200Config,
+        controls: {
+            ...commonS7_200Config.controls,
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+        },
     },
     "GTPL-111-gT-80E-P-S7-200": {
         serialNumber: "GTPL_111",
         ...commonS7_200Config,
+        controls: {
+            ...commonS7_200Config.controls,
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+        },
     },
     "GTPL-112-gT-80E-P-S7-200": {
         serialNumber: "GTPL_112",
         ...commonS7_200Config,
+        controls: {
+            ...commonS7_200Config.controls,
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+        },
     },
     "GTPL-113-gT-80E-P-S7-200": {
         serialNumber: "GTPL_113",
         ...commonS7_200Config,
+        controls: {
+            ...commonS7_200Config.controls,
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+        },
     },
     "GTPL-132-300-AP-S7-1200": {
         serialNumber: "GTPL_132",
@@ -279,6 +319,7 @@ const machineConfig = {
             AHT: { key: "AHT_vale_speed", label: "After Heat(AHT)" },
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
         },
         compressor: {
             time: "Compressor_timer",
@@ -297,6 +338,7 @@ const machineConfig = {
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
             COND: { key: "Cond_fan_speed", label: "Condenser Fan" },
+            AHT: { key: "AHT_valve_speed", label: "After Heat(AHT)" },
         },
         compressor: {
             time: "Compressor_timer",
@@ -316,6 +358,8 @@ const machineConfig = {
             HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
             BLOWER: { key: "Blower_speed", label: "Blower" },
             COND: { key: "Cond_fan_speed", label: "Condenser Fan" },
+            AHT: { key: "AHT_valve_speed", label: "After Heat(AHT)" },
+
         },
         compressor: {
             time: "Compressor_timer",
@@ -381,6 +425,44 @@ const machineConfig = {
             lp: "AI_SUC_PRESSURE",
         },
     },
+    "GTPL-142-gT-XXX-S7-1200": {
+        serialNumber: "GTPL_142",
+        temperatureSensors: {
+            T0: { key: "T0_temp_mean", label: "After Heat(T0)" },
+            T1: { key: "T1_temp_mean", label: "Cold Air(T1)" },
+            T2: { key: "T2_temp_mean", label: "Ambient(T2)" },
+        },
+        controls: {
+            AHT: { key: "AHT_vale_speed", label: "After Heat(AHT)" },
+            HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
+            BLOWER: { key: "Blower_speed", label: "Blower" },
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+        },
+        compressor: {
+            time: "Compressor_timer",
+            hp: "HP_value",
+            lp: "LP_value",
+        },
+    },
+    "GTPL-143-gT-XXX-S7-1200": {
+        serialNumber: "GTPL_143",
+        temperatureSensors: {
+            T0: { key: "T0_temp_mean", label: "After Heat(T0)" },
+            T1: { key: "T1_temp_mean", label: "Cold Air(T1)" },
+            T2: { key: "T2_temp_mean", label: "Ambient(T2)" },
+        },
+        controls: {
+            AHT: { key: "AHT_vale_speed", label: "After Heat(AHT)" },
+            HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
+            BLOWER: { key: "Blower_speed", label: "Blower" },
+            COND: { key: "Fan_speed", label: "Condensor Fan" },
+        },
+        compressor: {
+            time: "Compressor_timer",
+            hp: "HP_value",
+            lp: "LP_value",
+        },
+    },
 };
 
 // Icon mapping for different data types
@@ -413,6 +495,7 @@ const colorMap = {
 
 export default function AutoScreen() {
     const router = useRouter();
+    const pathname = usePathname();
     const { effective } = useThemeMode();
     const { t } = useI18n();
     const insets = useSafeAreaInsets();
@@ -420,52 +503,207 @@ export default function AutoScreen() {
 
     const { data, isConnected, error, formatValue } = useAutoData(device || '');
 
-    // Get configuration for the current device
-    const currentConfig = device ? 
-        machineConfig[device as keyof typeof machineConfig] || 
-        machineConfig["GTPL-122-gT-1000T-S7-1200"] : 
-        machineConfig["GTPL-122-gT-1000T-S7-1200"];
 
-    const handleBack = () => router.back();
+      // Check for special modes
+  const isGrainChilling = pathname.includes("auto-grain");
+  const isPaddyChilling = pathname.includes("auto-paddy");
+  const isSpecialMachine = device?.includes('GTPL-137-GT-450T-S7-1200') || device?.includes('GTPL-138-GT-450T-S7-1200') || device?.includes('GTPL-134-gT-450T-S7-1200') || device?.includes("GTPL-061-gT-450T-S7-1200") || device?.includes('GTPL-121-gT-1000T-S7-1200') || device?.includes('GTPL-122-gT-1000T-S7-1200') || device?.includes('GTPL-124-GT-450T-S7-1200') || device?.includes('GTPL-131-GT-650T-S7-1200') || false;
 
-    // Helper function to get value from data object using key path
-    const getValueByKey = (key: string) => {
-        if (!data) return '--';
-        // Handle nested keys if needed (e.g., data.compressor.time)
-        return data[key] !== undefined ? data[key] : '--';
-    };
+  // Get configuration for the current device
+  const currentConfig = device ? 
+    machineConfig[device as keyof typeof machineConfig] || 
+    machineConfig["GTPL-122-gT-1000T-S7-1200"] : 
+    machineConfig["GTPL-122-gT-1000T-S7-1200"];
 
-    // Get temperature cards based on configuration
-    const getTemperatureCards = () => {
-        const sensors = currentConfig.temperatureSensors;
-        return Object.entries(sensors).map(([sensorKey, sensorConfig], index) => {
-            const value = getValueByKey(sensorConfig.key);
-            const icon = iconMap.temperature;
-            const color = colorMap.temperature[sensorKey as keyof typeof colorMap.temperature] || 
-                         colorMap.temperature.DEFAULT;
-            
-            return (
-                <DataCard
-                    key={`temp-${sensorKey}`}
-                    label={sensorConfig.label}
-                    value={formatValue(value, "°C")}
-                    icon={icon}
-                    color={color}
-                    delay={index * 100}
-                />
-            );
-        });
-    };
+  const handleBack = () => router.back();
+
+  // Helper function to get value from data object using key path
+  const getValueByKey = (key: string) => {
+    if (!data) return '--';
+    return data[key] !== undefined ? data[key] : '--';
+  };
+
+  // Helper function to format heater value based on machine type
+  const formatHeaterValue = (value: any) => {
+    const s7_200_machines = ['GTPL-118-gT-80E-P-S7-200', 'GTPL-108-gT-40E-P-S7-200', 'GTPL-109-gT-40E-P-S7-200', 'GTPL-110-gT-40E-P-S7-200', 'GTPL-111-gT-80E-P-S7-200', 'GTPL-112-gT-80E-P-S7-200', 'GTPL-113-gT-80E-P-S7-200'];
+    const isS7_200 = s7_200_machines.includes(device || '');
+    
+    if (isS7_200) {
+      // For S7-200 machines, show ON/OFF based on value
+      if (value === undefined || value === null || value === '' || value === 0 || value === '0') {
+        return 'OFF';
+      } else {
+        return 'ON';
+      }
+    } else {
+      // For other machines, show percentage
+      return value;
+    }
+  };
+
+  // Get T1/T0 value based on machine type and mode
+  const getT1T0Value = () => {
+    if (!data) return '--';
+    
+    if (device?.includes("GTPL-061-gT-450T-S7-1200")) {
+      return data?.T1_set_point ||
+        data?.T1_temp_mean ||
+        data?.COLD_AIR_TEMP_T1 ||
+        data?.T1_SET_POINT || '--';
+    } else if (isSpecialMachine) {
+      if (isGrainChilling) {
+        return data?.T0_set_point ||
+          data?.AIR_OUTLET_TEMP ||
+          data?.T1_set_point_in_grain_chilling_mode || 
+          data?.T0_set_point_in_grain_chilling_mode || '--';
+      } else if (isPaddyChilling) {
+        return data?.T0_set_point ||
+          data?.AIR_OUTLET_TEMP ||
+          data?.T1_set_point_in_paddy_aeging_mode || 
+          data?.T0_set_point_in_paddy_aeging_mode || '--';
+      } else {
+        return data?.T0_set_point ||
+          data?.AIR_OUTLET_TEMP ||
+          data?.T1_set_point_in_paddy_aeging_mode || 
+          data?.T0_temp_mean || '--';
+      }
+    } else {
+      return data?.T1_set_point ||
+        data?.T1_temp_mean ||
+        data?.T1_SET_POINT ||
+        data?.Delta_T_set_point_paddy_aeging_mode || '--';
+    }
+  };
+
+  // Get T Delta value based on machine type and mode
+  const getTDeltaValue = () => {
+    if (!data) return '--';
+    
+    if (isSpecialMachine) {
+      if (isGrainChilling) {
+        return data?.Delta_T_set_point ||
+          data?.Th_T1 ||
+          data?.Delta_T_set_point_in_grain_chilling_mode || '--';
+      } else if (isPaddyChilling) {
+        return data?.Delta_T_set_point ||
+          data?.Th_T1 ||
+          data?.Delta_T_set_point_paddy_aeging_mode || '--';
+      } else {
+        return data?.Delta_T_set_point ||
+          data?.Th_T1 ||
+          data?.Delta_T_set_point_in_grain_chilling_mode ||
+          data?.Delta_T_set_point_paddy_aeging_mode || '--';
+      }
+    } else if (device?.includes("GTPL-061-gT-450T-S7-1200")) {
+      return data?.T0_T1_set_point || 
+        data?.AIR_OUTLET_TEMP || 
+        data?.COLD_AIR_TEMP_T1 || 
+        data?.T1_temp_mean || '--';
+    } else {
+      return data?.AI_TH_Act || 
+        data?.Th_T1 || 
+        data?.TH_T1_set_point || '--';
+    }
+  };
+
+  // Get label for T1/T0 card
+  const getT1T0Label = () => {
+    if (device?.includes("GTPL-061-gT-450T-S7-1200")) {
+      return "T1 Set Point";
+    } else if (isSpecialMachine) {
+      return "T0";
+    } else {
+      return "T1";
+    }
+  };
+
+  // Get label for T Delta card
+  const getTDeltaLabel = () => {
+    if (device?.includes("GTPL-061-gT-450T-S7-1200")) {
+      return "T0 - T1";
+    } else if (isSpecialMachine) {
+      return "T Delta";
+    } else {
+      return "TH - T1";
+    }
+  };
+
+  // Get temperature cards including T1/T0 and T Delta
+  const getTemperatureCards = () => {
+    const sensors = currentConfig.temperatureSensors;
+    const cards = [];
+    
+    // Add T1/T0 card as first card
+    cards.push({
+      key: 't1-t0',
+      sensorKey: 'T1T0',
+      label: getT1T0Label(),
+      value: getT1T0Value(),
+      icon: iconMap.temperature,
+      color: colorMap.temperature.T0 || colorMap.temperature.DEFAULT,
+    });
+
+    // Add T Delta card as second card
+    cards.push({
+      key: 't-delta',
+      sensorKey: 'TDELTA',
+      label: getTDeltaLabel(),
+      value: getTDeltaValue(),
+      icon: iconMap.temperature,
+      color: colorMap.temperature.T1 || colorMap.temperature.DEFAULT,
+    });
+
+    // Add other temperature sensors
+    Object.entries(sensors).forEach(([sensorKey, sensorConfig], index) => {
+      const value = getValueByKey(sensorConfig.key);
+      cards.push({
+        key: `temp-${sensorKey}`,
+        sensorKey,
+        label: sensorConfig.label,
+        value,
+        icon: iconMap.temperature,
+        color: colorMap.temperature[sensorKey as keyof typeof colorMap.temperature] || 
+               colorMap.temperature.DEFAULT,
+      });
+    });
+
+    return cards.map((card, index) => (
+      <DataCard
+        key={card.key}
+        label={card.label}
+        value={formatValue(card.value, "°C")}
+        icon={card.icon}
+        color={card.color}
+        delay={index * 100}
+      />
+    ));
+  };
+
+
 
     // Get control cards based on configuration
     const getControlCards = () => {
         const controls = currentConfig.controls;
+        const heaterDevices = ['GTPL-120-gT-180E-S7-1200', 'GTPL-116-gT-240E-S7-1200', 'GTPL-115-gT-180E-S7-1200', 'GTPL-30-gT-180E-S7-1200', 'GTPL-117-gT-320E-S7-1200', 'GTPL-119-gT-180E-S7-1200', 'GTPL-121-gT-1000T-S7-1200'];
+        const s7_200_machines = ['GTPL-118-gT-80E-P-S7-200', 'GTPL-108-gT-40E-P-S7-200', 'GTPL-109-gT-40E-P-S7-200', 'GTPL-110-gT-40E-P-S7-200', 'GTPL-111-gT-80E-P-S7-200', 'GTPL-112-gT-80E-P-S7-200', 'GTPL-113-gT-80E-P-S7-200'];
+        
+        // Check if current device is in the heater devices list
+        const hasSpecialHeater = heaterDevices.includes(device || '');
+        // Check if current device is S7-200 (should not show heater)
+        const isS7_200 = s7_200_machines.includes(device || '');
+        
         return Object.entries(controls).map(([controlKey, controlConfig], index) => {
-            const value = getValueByKey(controlConfig.key);
+            // Skip heater for devices that have special heater handling or are S7-200
+            if (controlKey === 'HTR' && (hasSpecialHeater || isS7_200)) {
+                return null; // Skip heater control
+            }
+            
+            const rawValue = getValueByKey(controlConfig.key);
+            const value = controlKey === 'HTR' ? formatHeaterValue(rawValue) : rawValue;
             const icon = controlKey === 'BLOWER' || controlKey === 'COND' ? 
                         iconMap.speed : iconMap.default;
             const color = colorMap.speed;
-            const unit = controlKey === 'BLOWER' || controlKey === 'COND' ? 'RPM' : '%';
+            const unit = controlKey === 'BLOWER' || controlKey === 'COND' ? '%' : (controlKey === 'HTR' ? '' : '%');
             
             return (
                 <DataCard
@@ -477,25 +715,16 @@ export default function AutoScreen() {
                     delay={(Object.keys(currentConfig.temperatureSensors).length + index) * 100}
                 />
             );
-        });
+        }).filter(Boolean); // Filter out null values
     };
-
+    
     // Get compressor cards based on configuration
     const getCompressorCards = () => {
         const compressor = currentConfig.compressor;
         const cards = [];
         
-        // Compressor Time
-        if (compressor.time) {
-            cards.push({
-                key: 'comp-time',
-                label: 'Compressor Time',
-                value: getValueByKey(compressor.time),
-                icon: iconMap.power,
-                color: colorMap.power,
-                unit: 'Hrs'
-            });
-        }
+        // Determine pressure unit based on device model
+        const pressureUnit = device && (device.includes('GTPL-137') || device.includes('GTPL-138')) ? 'bar' : 'psi';
         
         // High Pressure
         if (compressor.hp) {
@@ -505,7 +734,7 @@ export default function AutoScreen() {
                 value: getValueByKey(compressor.hp),
                 icon: iconMap.pressure,
                 color: colorMap.pressure,
-                unit: 'Bar'
+                unit: pressureUnit
             });
         }
         
@@ -517,7 +746,25 @@ export default function AutoScreen() {
                 value: getValueByKey(compressor.lp),
                 icon: iconMap.pressure,
                 color: colorMap.pressure,
-                unit: 'Bar'
+                unit: pressureUnit
+            });
+        }
+        
+        // Special heater component for specific devices after LP
+        const heaterDevices = ['GTPL-120-gT-180E-S7-1200', 'GTPL-116-gT-240E-S7-1200', 'GTPL-115-gT-180E-S7-1200', 'GTPL-30-gT-180E-S7-1200', 'GTPL-117-gT-320E-S7-1200', 'GTPL-119-gT-180E-S7-1200', 'GTPL-121-gT-1000T-S7-1200'];
+        const s7_200_machines = ['GTPL-118-gT-80E-P-S7-200', 'GTPL-108-gT-40E-P-S7-200', 'GTPL-109-gT-40E-P-S7-200', 'GTPL-110-gT-40E-P-S7-200', 'GTPL-111-gT-80E-P-S7-200', 'GTPL-112-gT-80E-P-S7-200', 'GTPL-113-gT-80E-P-S7-200'];
+        
+        if (heaterDevices.includes(device || '') && !s7_200_machines.includes(device || '') && 'HTR' in currentConfig.controls && currentConfig.controls.HTR) {
+            const heaterControl = currentConfig.controls.HTR;
+            const rawHeaterValue = getValueByKey(heaterControl.key);
+            const heaterValue = formatHeaterValue(rawHeaterValue);
+            cards.push({
+                key: 'heater-after-lp',
+                label: 'Heater',
+                value: heaterValue,
+                icon: iconMap.power,
+                color: colorMap.power,
+                unit: ''
             });
         }
         
@@ -537,6 +784,10 @@ export default function AutoScreen() {
         });
     };
 
+    if (!data) {
+        return <LoadingScreen />;
+    }
+
     return (
         <ThemedView style={styles.container}>
             <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
@@ -546,9 +797,9 @@ export default function AutoScreen() {
                 <View>
                     <ThemedText style={styles.headerTitle}>AUTO MODE</ThemedText>
                     <ThemedText style={styles.headerSubtitle}>{device}</ThemedText>
-                    <ThemedText style={styles.configInfo}>
+                    {/* <ThemedText style={styles.configInfo}>
                         Config: {currentConfig.serialNumber}
-                    </ThemedText>
+                    </ThemedText> */}
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: isConnected ? '#10b981' : '#ef4444' }]}>
                     <View style={styles.statusDot} />
@@ -568,10 +819,8 @@ export default function AutoScreen() {
                     {/* Controls */}
                     {getControlCards()}
                     
-                    {/* Compressor Info */}
+                    {/* Compressor Info - includes HP, LP, and Heater */}
                     {getCompressorCards()}
-                    
-                 
                 </View>
 
                 {/* <View style={styles.actionSection}>

@@ -3,6 +3,7 @@ import { ThemedView } from '@/components/themed-view';
 import AnimatedButton from '@/components/ui/animated-button';
 import AnimatedCard from '@/components/ui/animated-card';
 import AnimatedText from '@/components/ui/animated-text';
+import LoadingScreen from '@/components/loading-screen';
 import { useAutoData } from '@/hooks/use-auto-data';
 import { useI18n } from '@/i18n';
 import { useThemeMode, useThemeTokens } from '@/providers/theme';
@@ -90,7 +91,7 @@ export default function FaultScreen() {
 
     // Resolve machine name
     const machineName = resolveMachineName(device || '');
-    const { data, isConnected, error } = useAutoData(machineName || device || '');
+    const { data, isConnected, error, isLoading } = useAutoData(machineName || device || '');
     
     const [currentView, setCurrentView] = useState<ViewType>('active'); // Current view state
     const [selectedFault, setSelectedFault] = useState<FaultCode | null>(null);
@@ -125,6 +126,11 @@ export default function FaultScreen() {
 
         fetchFaultHistory();
     }, [currentView, machineName]);
+
+    // Show loading screen while data is loading
+    if (isLoading && !data) {
+        return <LoadingScreen />;
+    }
 
     const machineType = getMachineType(machineName || device || '');
     const faultCodes = getFaultCodesForMachine(machineName || device || '');

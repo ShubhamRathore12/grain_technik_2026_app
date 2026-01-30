@@ -39,6 +39,7 @@ export const useMachineStatusFeed = () => {
 
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<MessageLog[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<number | null>(null);
   const isMounted = useRef(true);
 
@@ -55,12 +56,13 @@ export const useMachineStatusFeed = () => {
 
     try {
       console.log("Fetching machine data from API...");
+      setError(null);
       const response = await fetch("https://grain-backend-1.onrender.com/api/status-public");
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result: any = await response.json();
       console.log("API response received:", result);
 
@@ -83,7 +85,7 @@ export const useMachineStatusFeed = () => {
         if (isMounted.current) setIsConnected(false);
         return;
       }
-      
+
       if (!Array.isArray(machinesData) || machinesData.length === 0) {
         console.warn("No machine data found in response");
         addMessage("No machine data available", "warning");
@@ -149,10 +151,14 @@ export const useMachineStatusFeed = () => {
           allOnline, allCooling, allInternet
         });
       }
-    } catch (error: any) {
-      console.error("Error fetching machine data:", error);
-      addMessage(`Error fetching machine data: ${error.message}`, "error");
-      if (isMounted.current) setIsConnected(false);
+    } catch (err: any) {
+      console.error("Error fetching machine data:", err);
+      const errorMsg = `Error fetching machine data: ${err.message}`;
+      addMessage(errorMsg, "error");
+      if (isMounted.current) {
+        setIsConnected(false);
+        setError(errorMsg);
+      }
     }
   }, [addMessage]); // Removed setStatus and setIsConnected from dependencies
 
@@ -185,9 +191,9 @@ export const useMachineStatusFeed = () => {
   useEffect(() => {
     isMounted.current = true;
     console.log("Machine status feed mounted");
-    
+
     startPolling();
-    
+
     return () => {
       console.log("Machine status feed unmounting");
       isMounted.current = false;
@@ -198,14 +204,14 @@ export const useMachineStatusFeed = () => {
     };
   }, [startPolling]);
 
-//   // Log status changes for debugging
-//   useEffect(() => {
-//     console.log("Status updated:", {
-//       connected: isConnected,
-//       machinesCount: status.machines.length,
-//       onlineMachines: status.machines.filter(m => m.machineStatus).length,
-//     });
-//   }, [status, isConnected]);
+  //   // Log status changes for debugging
+  //   useEffect(() => {
+  //     console.log("Status updated:", {
+  //       connected: isConnected,
+  //       machinesCount: status.machines.length,
+  //       onlineMachines: status.machines.filter(m => m.machineStatus).length,
+  //     });
+  //   }, [status, isConnected]);
 
   return {
     status,
@@ -214,5 +220,6 @@ export const useMachineStatusFeed = () => {
     stopPolling,
     startPolling,
     refresh,
+    error,
   };
 };

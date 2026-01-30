@@ -1,8 +1,10 @@
+import LoadingScreen from '@/components/loading-screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAutoData } from '@/hooks/use-auto-data';
 import { useThemeMode } from '@/providers/theme';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
+
 import {
     Activity,
     ChevronLeft,
@@ -13,7 +15,6 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
     Animated,
     Dimensions,
     ScrollView,
@@ -126,6 +127,16 @@ const getIconForType = (type: string, controlKey?: string) => {
     }
 };
 
+// Icon mapping for different data types
+const iconMap = {
+    temperature: Thermometer,
+    speed: Fan,
+    frequency: Zap,
+    power: Activity,
+    pressure: Gauge,
+    default: Activity
+};
+
 const DataCard = ({ label, value, icon: Icon, color, delay = 0, fullWidth = false }: any) => {
     const { effective } = useThemeMode();
     const [fadeAnim] = useState(new Animated.Value(0));
@@ -167,35 +178,164 @@ export default function AutoPaddyScreen() {
     const { effective } = useThemeMode();
     const insets = useSafeAreaInsets();
     const { device } = useLocalSearchParams<{ device: string }>();
+    const pathname = usePathname();
 
     const { data, isConnected, error, formatValue } = useAutoData(device || '');
+     // Paddy mode is always active for this screen
+  const isPaddyChilling = true;
+  const isGrainChilling = false;
+   const isSpecialMachine = device?.includes("GTPL-061-gT-450T-S7-1200") || device?.includes('GTPL-121-gT-1000T-S7-1200') || device?.includes('GTPL-122-gT-1000T-S7-1200') || device?.includes('GTPL-139-GT-300AP-S7-1200') || device?.includes('GTPL-142-gT-450AP-S7-1200') || device?.includes('GTPL-143-gT-450AP-S7-1200') || device?.includes('GTPL-124-GT-450T-S7-1200') || device?.includes('GTPL-131-GT-650T-S7-1200') || device?.includes('GTPL-132-300-AP-S7-1200') || device?.includes('GTPL-136-gT-450AP') || false;
 
-    // Get configuration for the current device
-    const config = device ? 
-        machineConfig[device as keyof typeof machineConfig] || 
-        machineConfig["GTPL-132-300-AP-S7-1200"] : 
-        machineConfig["GTPL-132-300-AP-S7-1200"];
+  // Get configuration for the current device
+  const currentConfig = device ? 
+    machineConfig[device as keyof typeof machineConfig] || 
+    machineConfig["GTPL-132-300-AP-S7-1200"] : 
+    machineConfig["GTPL-132-300-AP-S7-1200"];
 
-    const handleBack = () => router.back();
+  const handleBack = () => router.back();
+
+  // Helper function to get value from data object using key path
+  const getValueByKey = (key: string) => {
+    if (!data) return '--';
+    return data[key] !== undefined ? data[key] : '--';
+  };
+
+  // Helper function to format heater value based on machine type
+  const formatHeaterValue = (value: any) => {
+    const s7_200_machines = ['GTPL-118-gT-80E-P-S7-200', 'GTPL-108-gT-40E-P-S7-200', 'GTPL-109-gT-40E-P-S7-200', 'GTPL-110-gT-40E-P-S7-200', 'GTPL-111-gT-80E-P-S7-200', 'GTPL-112-gT-80E-P-S7-200', 'GTPL-113-gT-80E-P-S7-200'];
+    const isS7_200 = s7_200_machines.includes(device || '');
+    
+    if (isS7_200) {
+      // For S7-200 machines, show ON/OFF based on value
+      if (value === undefined || value === null || value === '' || value === 0 || value === '0') {
+        return 'OFF';
+      } else {
+        return 'ON';
+      }
+    } else {
+      // For other machines, show percentage
+      return value;
+    }
+  };
+
+  // Get T1/T0 value for paddy mode
+  const getT1T0Value = () => {
+    if (!data) return '--';
+    
+    if (device?.includes("GTPL-061-gT-450T-S7-1200")) {
+      return data?.T1_set_point ||
+        data?.T1_temp_mean ||
+        data?.COLD_AIR_TEMP_T1 ||
+        data?.T1_SET_POINT || '--';
+    } else {
+      // Paddy mode - use paddy-specific setpoints
+      return data?.T0_set_point ||
+        data?.AIR_OUTLET_TEMP ||
+        data?.T1_set_point_in_paddy_aeging_mode || 
+        data?.T0_set_point_in_paddy_aeging_mode || 
+        data?.T0_temp_mean || '--';
+    }
+  };
+
+  // Get T Delta value for paddy mode
+  const getTDeltaValue = () => {
+    if (!data) return '--';
+    
+    if (device?.includes("GTPL-061-gT-450T-S7-1200")) {
+      return data?.T0_T1_set_point || 
+        data?.AIR_OUTLET_TEMP || 
+        data?.COLD_AIR_TEMP_T1 || 
+        data?.T1_temp_mean || '--';
+    } else {
+      // Paddy mode - use paddy-specific delta values
+      return data?.Delta_T_set_point ||
+        data?.Th_T1 ||
+        data?.Delta_T_set_point_paddy_aeging_mode || '--';
+    }
+  };
+
+  // Get label for T1/T0 card (paddy mode)
+  const getT1T0Label = () => {
+    if (device?.includes("GTPL-061-gT-450T-S7-1200")) {
+      return "T1 Set Point";
+    } else {
+      return "T0";
+    }
+  };
+
+  // Get label for T Delta card (paddy mode)
+  const getTDeltaLabel = () => {
+    if (device?.includes("GTPL-061-gT-450T-S7-1200")) {
+      return "T0 - T1";
+    } else {
+      return "T Delta";
+    }
+  };
+
+  // Get temperature cards including T1/T0 and T Delta
+  const getTemperatureCards = () => {
+    const sensors = currentConfig.temperatureSensors;
+    const cards = [];
+    
+    // Add T1/T0 card as first card
+    cards.push({
+      key: 't1-t0',
+      sensorKey: 'T1T0',
+      label: getT1T0Label(),
+      value: getT1T0Value(),
+      icon: iconMap.temperature,
+      color: colorMap.temperature.T0 || colorMap.temperature.DEFAULT,
+    });
+
+    // Add T Delta card as second card
+    cards.push({
+      key: 't-delta',
+      sensorKey: 'TDELTA',
+      label: getTDeltaLabel(),
+      value: getTDeltaValue(),
+      icon: iconMap.temperature,
+      color: colorMap.temperature.T1 || colorMap.temperature.DEFAULT,
+    });
+
+    // Add other temperature sensors
+    Object.entries(sensors).forEach(([sensorKey, sensorConfig]: [string, any], index) => {
+      const value = getValueByKey(sensorConfig.key);
+      cards.push({
+        key: `temp-${sensorKey}`,
+        sensorKey,
+        label: sensorConfig.label,
+        value,
+        icon: iconMap.temperature,
+        color: colorMap.temperature[sensorKey as keyof typeof colorMap.temperature] || 
+               colorMap.temperature.DEFAULT,
+      });
+    });
+
+    return cards.map((card, index) => (
+      <DataCard
+        key={card.key}
+        label={card.label}
+        value={formatValue(card.value, "°C")}
+        icon={card.icon}
+        color={card.color}
+        delay={index * 100}
+      />
+    ));
+  };
 
     if (!data) {
-        return (
-            <ThemedView style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#f59e0b" />
-                <ThemedText style={styles.loadingText}>Connecting to device...</ThemedText>
-            </ThemedView>
-        );
+        return <LoadingScreen />;
     }
 
-    // Convert temperature sensors object to array for rendering
-    const temperatureSensorsArray = Object.entries(config.temperatureSensors).map(([key, sensor]: [string, any]) => ({
+ // Convert temperature sensors object to array for rendering
+    const temperatureSensorsArray = Object.entries(currentConfig.temperatureSensors).map(([key, sensor]: [string, any]) => ({
         ...sensor,
         originalKey: key,
         color: colorMap.temperature[key as keyof typeof colorMap.temperature] || colorMap.temperature.DEFAULT
     }));
 
     // Convert controls object to array for rendering
-    const controlsArray = Object.entries(config.controls).map(([key, control]: [string, any]) => ({
+    const controlsArray = Object.entries(currentConfig.controls).map(([key, control]: [string, any]) => ({
         ...control,
         originalKey: key,
         color: colorMap.controls[key as keyof typeof colorMap.controls] || colorMap.controls.DEFAULT
@@ -210,9 +350,7 @@ export default function AutoPaddyScreen() {
                 <View>
                     <ThemedText style={styles.headerTitle}>PADDY AGEING</ThemedText>
                     <ThemedText style={styles.headerSubtitle}>{device}</ThemedText>
-                    <ThemedText style={styles.configInfo}>
-                        Config: {config.serialNumber}
-                    </ThemedText>
+              
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: isConnected ? '#10b981' : '#ef4444' }]}>
                     <View style={styles.statusDot} />
@@ -229,16 +367,7 @@ export default function AutoPaddyScreen() {
                     <ThemedText style={styles.sectionTitle}>Temperatures</ThemedText>
                 </View>
                 <View style={styles.grid}>
-                    {temperatureSensorsArray.map((sensor, index) => (
-                        <DataCard
-                            key={sensor.key}
-                            label={sensor.label}
-                            value={formatValue(data?.[sensor.key], "°C")}
-                            icon={getIconForType('temperature')}
-                            color={sensor.color}
-                            delay={index * 100}
-                        />
-                    ))}
+                   {getTemperatureCards()}
                 </View>
 
                 <View style={styles.sectionHeader}>
@@ -261,10 +390,10 @@ export default function AutoPaddyScreen() {
                     <ThemedText style={styles.sectionTitle}>Compressor Status</ThemedText>
                 </View>
                 <View style={styles.grid}>
-                    {config.compressor.time && (
+                    {currentConfig.compressor.time && (
                         <DataCard
                             label="Compressor Time"
-                            value={formatValue(data?.[config.compressor.time], " Hrs")}
+                            value={formatValue(data?.[currentConfig.compressor.time], " Hrs")}
                             icon={Activity}
                             color={colorMap.compressor.time}
                             delay={700}
@@ -272,14 +401,14 @@ export default function AutoPaddyScreen() {
                     )}
                     <DataCard
                         label="LP Value"
-                        value={formatValue(data?.[config.compressor.lp], " bar")}
+                        value={formatValue(data?.[currentConfig.compressor.lp], " bar")}
                         icon={getIconForType('compressor')}
                         color={colorMap.compressor.lp}
                         delay={750}
                     />
                     <DataCard
                         label="HP Value"
-                        value={formatValue(data?.[config.compressor.hp], " bar")}
+                        value={formatValue(data?.[currentConfig.compressor.hp], " bar")}
                         icon={getIconForType('compressor')}
                         color={colorMap.compressor.hp}
                         delay={800}

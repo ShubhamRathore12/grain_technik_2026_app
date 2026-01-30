@@ -1,6 +1,7 @@
 import { useI18n } from '@/i18n';
 import { useAuth } from '@/providers/auth';
 import { useThemeMode } from '@/providers/theme';
+import { lightHaptic, mediumHaptic } from '@/utils/haptic-utils';
 import { useRouter } from 'expo-router';
 import {
   ChevronRight,
@@ -42,7 +43,7 @@ export default function LoginScreen() {
     password: ''
   });
   const [isValid, setIsValid] = useState(false);
-  
+
   // Animation values
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
@@ -119,7 +120,7 @@ export default function LoginScreen() {
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /\d/.test(password);
-    
+
     return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumber;
   };
 
@@ -154,7 +155,10 @@ export default function LoginScreen() {
     if (!validateForm()) {
       return;
     }
-    
+
+    // Haptic feedback on button press
+    mediumHaptic();
+
     // Add button press animation
     Animated.sequence([
       Animated.timing(bgScale, {
@@ -168,7 +172,7 @@ export default function LoginScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-    
+
     try {
       await login({ username, password });
       router.replace('/(tabs)/devices');
@@ -213,7 +217,7 @@ export default function LoginScreen() {
                 ],
                 width: particle.size,
                 height: particle.size,
-                backgroundColor: effective === 'dark' 
+                backgroundColor: effective === 'dark'
                   ? `rgba(59, 130, 246, ${0.1 + particle.size / 100})`
                   : `rgba(59, 130, 246, ${0.05 + particle.size / 200})`,
               },
@@ -227,7 +231,10 @@ export default function LoginScreen() {
         <View style={styles.headerControls}>
           <TouchableOpacity
             style={[styles.iconButton, effective === 'dark' && styles.iconButtonDark]}
-            onPress={() => setMode(mode === 'dark' ? 'light' : 'dark')}
+            onPress={() => {
+              lightHaptic();
+              setMode(mode === 'dark' ? 'light' : 'dark');
+            }}
           >
             {mode === 'dark' ? (
               <Sun size={IconSize} color={iconColor} />
@@ -237,7 +244,10 @@ export default function LoginScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.iconButton, effective === 'dark' && styles.iconButtonDark]}
-            onPress={() => setLocale(locale === 'en' ? 'de' : 'en')}
+            onPress={() => {
+              lightHaptic();
+              setLocale(locale === 'en' ? 'de' : 'en');
+            }}
           >
             <Globe size={IconSize} color={iconColor} />
             <Text style={[styles.localeText, { color: iconColor }]}>

@@ -1,3 +1,4 @@
+import LoadingScreen from '@/components/loading-screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import AnimatedButton from '@/components/ui/animated-button';
@@ -27,6 +28,7 @@ import {
   FlatList,
   Image,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -45,7 +47,7 @@ interface Device {
   location: string;
   image: string;
   type: MachineType;
-  status: true | false | 'maintenance';
+  status: 'active' | 'inactive' | 'maintenance';
   internetStatus: boolean;
   coolingStatus: boolean;
   chillerModel?: string;
@@ -407,7 +409,10 @@ const allDevices: Device[] = [
   },
 ];
 
-const locations = ['All', 'Germany', 'Turkey', 'Noida', 'Indonesia', 'Thailand', 'India'];
+const locations = React.useMemo(() => {
+  const uniqueLocations = [...new Set(allDevices.map(device => device.location))];
+  return ['All', ...uniqueLocations.sort()];
+}, []);
 const companies = ['Grain Technik'];
 
 export default function DevicesScreen() {
@@ -422,7 +427,7 @@ export default function DevicesScreen() {
   const { status: machineStatus, isConnected, error: statusError, refresh: refreshStatus } = useMachineStatusFeed();
   const [statusLoading, setStatusLoading] = useState(true);
   const deviceStatuses = machineStatus?.machines || [];
-  
+
   // Update loading state when machine status is initially loaded
   useEffect(() => {
     if (deviceStatuses.length > 0) {
@@ -439,12 +444,7 @@ export default function DevicesScreen() {
 
   // Show loading screen while checking authentication
   if (authLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={tokens.colors.primary} />
-        <Text style={[styles.loadingText, { color: tokens.colors.text }]}>Checking authentication...</Text>
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   // Don't render content if not authenticated
@@ -495,12 +495,12 @@ export default function DevicesScreen() {
     "GTPL-142-gT-450AP-S7-1200": "GTPL_142",
     "GTPL-143-gT-450AP-S7-1200": "GTPL_143"
   };
-  
+
   // Function to get device status
   const getDeviceStatus = (deviceName: string) => {
     const key = deviceNameToStatusKey[deviceName];
-    const deviceStatus = deviceStatuses.find(m => m.machineName === key);
-    
+    const deviceStatus = deviceStatuses.find((m: any) => m.machineName === key);
+
     return {
       machineStatus: deviceStatus?.machineStatus ?? false,
       internetStatus: deviceStatus?.internetStatus ?? false,
@@ -508,24 +508,27 @@ export default function DevicesScreen() {
       hasNewData: deviceStatus?.hasNewData ?? false,
     };
   };
-  
-  // Map devices with their status
-  const devicesWithStatus = allDevices.map((device: Device) => {
-    const deviceStatus = getDeviceStatus(device.name);
-    
-    const updatedStatus: 'active' | 'inactive' | 'maintenance' = deviceStatus.machineStatus ? 'active' : (device.status === 'maintenance' ? 'maintenance' : 'inactive');
-    
-    return {
-      ...device,
-      status: updatedStatus,
-      internetStatus: deviceStatus.internetStatus,
-      coolingStatus: deviceStatus.coolingStatus,
-    };
-  });
+
+  // Map devices with their status - memoized for performance
+  const devicesWithStatus = React.useMemo(() => {
+    return allDevices.map((device: Device) => {
+      const deviceStatus = getDeviceStatus(device.name);
+
+      const updatedStatus: 'active' | 'inactive' | 'maintenance' =
+        deviceStatus.machineStatus ? 'active' : (device.status === 'maintenance' ? 'maintenance' : 'inactive');
+
+      return {
+        ...device,
+        status: updatedStatus,
+        internetStatus: deviceStatus.internetStatus,
+        coolingStatus: deviceStatus.coolingStatus,
+      };
+    });
+  }, [deviceStatuses]);
 
   const menuTriggerRef = useRef<View>(null);
 
-  const handleDevicePress = (device: Device, event: any) => {
+  const handleDevicePress = React.useCallback((device: Device, event: any) => {
     setSelectedDevice(device);
     setSelectedMachineType(device.type);
 
@@ -535,7 +538,7 @@ export default function DevicesScreen() {
 
     setMenuPosition({ x: touchX, y: touchY });
     setShowContextMenu(true);
-  };
+  }, []);
 
   // Animate filter dropdown whenever showFilters changes
   useEffect(() => {
@@ -556,22 +559,24 @@ export default function DevicesScreen() {
     setShowFilters(false);
   };
 
-  const filteredDevices = devicesWithStatus.filter((device) => {
-    if (selectedLocation === 'All') return true;
-    return device.location === selectedLocation;
-  });
+  const filteredDevices = React.useMemo(() => {
+    return devicesWithStatus.filter((device) => {
+      if (selectedLocation === 'All') return true;
+      return device.location === selectedLocation;
+    });
+  }, [devicesWithStatus, selectedLocation]);
 
-  const handleViewMore = (deviceName: string) => {
+  const handleViewMore = React.useCallback((deviceName: string) => {
     const deviceStatus = getDeviceStatus(deviceName);
     const machineStatusValue = deviceStatus.machineStatus;
-    
-    const statusString = encodeURIComponent(JSON.stringify({ 
+
+    const statusString = encodeURIComponent(JSON.stringify({
       machineStatus: machineStatusValue,
       internetStatus: deviceStatus.internetStatus,
       coolingStatus: deviceStatus.coolingStatus,
       hasNewData: deviceStatus.hasNewData
     }));
-    
+
     router.push({
       pathname: '/menu/[device]',
       params: {
@@ -579,9 +584,9 @@ export default function DevicesScreen() {
         status: statusString,
       },
     });
-  };
+  }, [router]);
 
-  const renderDeviceCard = ({ item }: { item: Device }) => (
+  const renderDeviceCard = React.useCallback(({ item }: { item: Device }) => (
     <AnimatedCard animated={true} initialScale={0.95} style={{ width: (width - 48) / 2, margin: 0, marginBottom: 16 }}>
       <Pressable
         style={styles.deviceContent}
@@ -698,7 +703,7 @@ export default function DevicesScreen() {
             />
             <AnimatedButton
               title=""
-              onPress={() => {}}
+              onPress={() => { }}
               variant="secondary"
               size="small"
             >
@@ -711,7 +716,7 @@ export default function DevicesScreen() {
         </View>
       </Pressable>
     </AnimatedCard>
-  );
+  ), [tokens.colors, selectedCompany, handleDevicePress, handleViewMore]);
 
   return (
     <ThemedView style={styles.container}>
@@ -801,7 +806,7 @@ export default function DevicesScreen() {
       {statusError && (
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: tokens.colors.error }]}>Error: {statusError}</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.retryButton, { backgroundColor: tokens.colors.primary }]}
             onPress={refreshStatus}
           >
@@ -818,6 +823,18 @@ export default function DevicesScreen() {
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={styles.gridContainer}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={6}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        removeClippedSubviews={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={false} // machineStatus tracking handled by hook
+            onRefresh={refreshStatus}
+            colors={[tokens.colors.primary]}
+            tintColor={tokens.colors.primary}
+          />
+        }
       />
     </ThemedView>
   );

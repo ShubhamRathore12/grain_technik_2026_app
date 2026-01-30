@@ -1,7 +1,10 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import AnimatedIcon from '@/components/ui/animated-icon';
+import { STAGGER_DELAY } from '@/constants/animation-config';
 import { useI18n } from '@/i18n';
 import { useThemeMode } from '@/providers/theme';
+import { mediumHaptic } from '@/utils/haptic-utils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
     AlertTriangle,
@@ -56,15 +59,6 @@ export default function DeviceMenuScreen() {
     const params = useLocalSearchParams<{ device: string; deviceData: string; status: string }>();
 
     const deviceName = params.device;
-    const [fadeAnim] = useState(() => new Animated.Value(0));
-
-    useEffect(() => {
-        Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-        }).start();
-    }, []);
 
     const isGrainPaddyDevice = grainPaddyDevices.includes(deviceName || '');
     const shouldHideAeration = hideAerationDevices.includes(deviceName || '');
@@ -191,14 +185,29 @@ export default function DeviceMenuScreen() {
     };
 
     const menuItems = getMenuItems();
+    const [itemAnims] = useState(() => menuItems.map(() => new Animated.Value(0)));
+
+    useEffect(() => {
+        const animations = itemAnims.map((anim, index) => {
+            return Animated.timing(anim, {
+                toValue: 1,
+                duration: 400,
+                delay: index * STAGGER_DELAY.medium,
+                useNativeDriver: true,
+            });
+        });
+
+        Animated.parallel(animations).start();
+    }, []);
 
     const handleMenuItemPress = (item: MenuItem) => {
+        mediumHaptic();
         router.push(`/menu/${deviceName}/${item.path}`);
     };
 
     const renderMenuItem = (item: MenuItem, index: number) => {
         const Icon = item.icon;
-        const animDelay = index * 80;
+        const anim = itemAnims[index] || new Animated.Value(1);
 
         return (
             <Animated.View
@@ -206,10 +215,10 @@ export default function DeviceMenuScreen() {
                 style={[
                     styles.menuItemWrapper,
                     {
-                        opacity: fadeAnim,
+                        opacity: anim,
                         transform: [
                             {
-                                translateY: fadeAnim.interpolate({
+                                translateY: anim.interpolate({
                                     inputRange: [0, 1],
                                     outputRange: [20, 0],
                                 }),
@@ -227,28 +236,20 @@ export default function DeviceMenuScreen() {
                         },
                     ]}
                     onPress={() => handleMenuItemPress(item)}
-                    activeOpacity={0.8}
+                    activeOpacity={0.7}
                 >
-                    {/* Gradient background on press */}
                     <View style={styles.menuItemContent}>
-                        {/* Icon container */}
                         <View
                             style={[
                                 styles.iconContainer,
-                                {
-                                    backgroundColor: effective === 'dark' ? '#0f172a' : '#f1f5f9',
-                                },
+                                { backgroundColor: item.iconColor + '15' },
                             ]}
                         >
-                            <Icon size={32} color={item.iconColor} />
+                            <AnimatedIcon animationType="pulse" duration={2000}>
+                                <Icon size={28} color={item.iconColor} />
+                            </AnimatedIcon>
                         </View>
-
-                        {/* Title */}
-                        <ThemedText style={styles.menuItemTitle} numberOfLines={2}>
-                            {item.title}
-                        </ThemedText>
-
-                        {/* Arrow indicator */}
+                        <ThemedText style={styles.menuItemTitle}>{item.title}</ThemedText>
                         <View style={styles.arrowContainer}>
                             <ArrowRight
                                 size={16}

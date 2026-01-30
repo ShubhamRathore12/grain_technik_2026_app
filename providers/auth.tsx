@@ -57,23 +57,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const token = await AsyncStorage.getItem('auth_token');
       const userData = await AsyncStorage.getItem('user_data');
+      const loginTimestamp = await AsyncStorage.getItem('login_timestamp');
       
       if (token && token !== 'undefined' && userData && userData !== 'undefined') {
-        // Simply check if we have stored auth data
-        setIsAuthenticated(true);
-        try {
-          const parsedUserData = JSON.parse(userData);
-          setUser(parsedUserData);
-        } catch (parseError) {
-          console.error('Error parsing stored user data:', parseError);
-          // Clear corrupted data
-          await AsyncStorage.multiRemove(['auth_token', 'user_data', 'full_login_response']);
+        // Check if 12 hours have passed since login (12 hours = 12 * 60 * 60 * 1000 milliseconds)
+        const twelveHoursInMs = 12 * 60 * 60 * 1000;
+        
+        if (loginTimestamp) {
+          const currentTime = Date.now();
+          const timeElapsed = currentTime - parseInt(loginTimestamp, 10);
+          
+          if (timeElapsed < twelveHoursInMs) {
+            // User is still within 12-hour window
+            setIsAuthenticated(true);
+            try {
+              const parsedUserData = JSON.parse(userData);
+              setUser(parsedUserData);
+            } catch (parseError) {
+              console.error('Error parsing stored user data:', parseError);
+              // Clear corrupted data
+              await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
+            }
+          } else {
+            // 12 hours have passed, clear auth data
+            await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
+          }
+        } else {
+          // No timestamp found, treat as expired
+          await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
         }
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
       // Clear any corrupted data
-      await AsyncStorage.multiRemove(['auth_token', 'user_data', 'full_login_response']);
+      await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
     } finally {
       setLoading(false);
     }
@@ -101,6 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await safeStoreItem('user_data', userData);
       // Store the complete login response
       await safeStoreItem('full_login_response', response);
+      // Store login timestamp
+      await safeStoreItem('login_timestamp', Date.now().toString());
       
       // Update state
       setIsAuthenticated(true);
@@ -129,14 +148,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Proceed with local logout only
       
       // Clear stored data
-      await AsyncStorage.multiRemove(['auth_token', 'user_data', 'full_login_response']);
+      await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
       
       setIsAuthenticated(false);
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
       // Clear local storage
-      await AsyncStorage.multiRemove(['auth_token', 'user_data', 'full_login_response']);
+      await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
       setIsAuthenticated(false);
       setUser(null);
     }

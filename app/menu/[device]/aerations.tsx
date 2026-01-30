@@ -10,7 +10,6 @@ import {
     Clock,
     Fan,
     Thermometer,
-    Timer,
     Wind,
     Zap
 } from 'lucide-react-native';
@@ -28,17 +27,26 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
-// List of devices that should only show "Aeration Without Heating"
-const WITHOUT_HEATING_ONLY_DEVICES = [
-    "GTPL-122-gT-1000T-S7-1200",
-    "GTPL-124-GT-450T-S7-1200",
-    "GTPL-131-GT-650T-S7-1200",
-    "GTPL-132-300-AP-S7-1200",
-    "GTPL-137-GT-450T-S7-1200",
-    "GTPL-138-GT-450T-S7-1200",
-    "GTPL-136-gT-450AP",
-    "GTPL-134-gT-450T-S7-1200",
-    "GTPL-135-gT-450T-S7-1200"
+// List of devices that should show both "Aeration Without Heating" and "Aeration With Heating"
+const DUAL_AERATION_DEVICES = [
+    "GTPL-108-gT-40E-P-S7-200",
+    "GTPL-109-gT-40E-P-S7-200",
+    "GTPL-110-gT-40E-P-S7-200",
+    "GTPL-111-gT-80E-P-S7-200",
+    "GTPL-112-gT-80E-P-S7-200",
+    "GTPL-113-gT-80E-P-S7-200",
+    "GTPL-118-gT-80E-P-S7-200"
+];
+
+// List of devices that should show heaters
+const HEATER_ENABLED_DEVICES = [
+    "GTPL-30-gT-180E-S7-1200",
+    "GTPL-114-gT-80E-P-S7-200",
+    "GTPL-115-gT-80E-P-S7-200",
+    "GTPL-116-gT-80E-P-S7-200",
+    "GTPL-117-gT-80E-P-S7-200",
+    "GTPL-119-gT-80E-P-S7-200",
+    "GTPL-120-gT-180E-S7-1200"
 ];
 
 export default function AerationScreen() {
@@ -50,6 +58,7 @@ export default function AerationScreen() {
 
     const { data, isConnected, error, formatValue } = useAutoData(device || '');
     const [shouldShowWithoutHeatingOnly, setShouldShowWithoutHeatingOnly] = useState(false);
+    const [shouldShowHeaters, setShouldShowHeaters] = useState(false);
     const [continuousMode, setContinuousMode] = useState(false);
     const [duration, setDuration] = useState(0);
     const [deltaTemp, setDeltaTemp] = useState(0);
@@ -57,10 +66,16 @@ export default function AerationScreen() {
     const [runningMinutes, setRunningMinutes] = useState(0);
 
     useEffect(() => {
-        if (device && WITHOUT_HEATING_ONLY_DEVICES.includes(device)) {
-            setShouldShowWithoutHeatingOnly(true);
+        if (device && DUAL_AERATION_DEVICES.includes(device)) {
+            setShouldShowWithoutHeatingOnly(false); // Show both modes
         } else {
-            setShouldShowWithoutHeatingOnly(false);
+            setShouldShowWithoutHeatingOnly(true); // Show single mode only
+        }
+        
+        if (device && HEATER_ENABLED_DEVICES.includes(device)) {
+            setShouldShowHeaters(true); // Show heaters
+        } else {
+            setShouldShowHeaters(false); // Hide heaters
         }
     }, [device]);
 
@@ -163,78 +178,21 @@ export default function AerationScreen() {
                 )}
 
                 <View style={styles.cardsContainer}>
-                    {/* Aeration Without Heating Card - Always shown */}
-                    <TouchableOpacity 
-                        style={[
-                            styles.aerationCard,
-                            { backgroundColor: effective === 'dark' ? '#1e293b' : '#ffffff' },
-                            isWithoutHeatRunning && styles.activeCard
-                        ]}
-                    >
-                        <View style={styles.cardHeader}>
-                            <Wind size={24} color={isWithoutHeatRunning ? '#10b981' : '#64748b'} />
-                            <ThemedText style={[styles.cardTitle, isWithoutHeatRunning && styles.activeTitle]}>
-                                AERATION WITHOUT HEATING
-                            </ThemedText>
-                            {isWithoutHeatRunning && (
-                                <View style={styles.runningBadge}>
-                                    <View style={styles.runningDot} />
-                                    <ThemedText style={styles.runningText}>RUNNING</ThemedText>
-                                </View>
-                            )}
-                        </View>
-
-                        <View style={styles.statsGrid}>
-                            <View style={styles.statBox}>
-                                <ThemedText style={styles.statLabel}>Running Time</ThemedText>
-                                <View style={styles.statValueContainer}>
-                                    <Clock size={16} color="#64748b" style={{ marginRight: 4 }} />
-                                    <ThemedText style={styles.statValue}>
-                                        {runningHours || 0}h {runningMinutes || 0}m
-                                    </ThemedText>
-                                </View>
-                            </View>
-                            <View style={styles.statBox}>
-                                <ThemedText style={styles.statLabel}>Set Duration</ThemedText>
-                                <View style={styles.statValueContainer}>
-                                    <Activity size={16} color="#64748b" style={{ marginRight: 4 }} />
-                                    <ThemedText style={styles.statValue}>
-                                        {duration || 0}h
-                                    </ThemedText>
-                                </View>
-                            </View>
-                        </View>
-
-                        <View style={styles.progressContainer}>
-                            <View style={styles.progressBarBg}>
-                                <View
-                                    style={[
-                                        styles.progressBarFill,
-                                        { 
-                                            width: `${withoutHeatingProgress}%`,
-                                            backgroundColor: isWithoutHeatRunning ? '#10b981' : '#0ea5e9'
-                                        }
-                                    ]}
-                                />
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* Aeration With Heating Card - Only show for non-specified devices */}
-                    {!shouldShowWithoutHeatingOnly && (
+                    {shouldShowWithoutHeatingOnly ? (
+                        // Single Aeration Card for non-dual devices
                         <TouchableOpacity 
                             style={[
                                 styles.aerationCard,
                                 { backgroundColor: effective === 'dark' ? '#1e293b' : '#ffffff' },
-                                isWithHeatRunning && styles.activeCard
+                                isAnyRunning && styles.activeCard
                             ]}
                         >
                             <View style={styles.cardHeader}>
-                                <Thermometer size={24} color={isWithHeatRunning ? '#f59e0b' : '#64748b'} />
-                                <ThemedText style={[styles.cardTitle, isWithHeatRunning && styles.activeTitle]}>
-                                    AERATION WITH HEATING
+                                <Wind size={24} color={isAnyRunning ? '#10b981' : '#64748b'} />
+                                <ThemedText style={[styles.cardTitle, isAnyRunning && styles.activeTitle]}>
+                                    AERATION
                                 </ThemedText>
-                                {isWithHeatRunning && (
+                                {isAnyRunning && (
                                     <View style={styles.runningBadge}>
                                         <View style={styles.runningDot} />
                                         <ThemedText style={styles.runningText}>RUNNING</ThemedText>
@@ -244,20 +202,41 @@ export default function AerationScreen() {
 
                             <View style={styles.statsGrid}>
                                 <View style={styles.statBox}>
-                                    <ThemedText style={styles.statLabel}>Heater Temp</ThemedText>
+                                    <ThemedText style={styles.statLabel}>Blower</ThemedText>
                                     <View style={styles.statValueContainer}>
-                                        <Thermometer size={16} color="#64748b" style={{ marginRight: 4 }} />
+                                        <Fan size={16} color="#64748b" style={{ marginRight: 4 }} />
                                         <ThemedText style={styles.statValue}>
-                                            {formatValue(afterHeatTemp, "°C")}
+                                            {formatValue(blowerSpeed, "%")}
                                         </ThemedText>
                                     </View>
                                 </View>
                                 <View style={styles.statBox}>
                                     <ThemedText style={styles.statLabel}>Set Point</ThemedText>
                                     <View style={styles.statValueContainer}>
-                                        <Activity size={16} color="#64748b" style={{ marginRight: 4 }} />
+                                        <Thermometer size={16} color="#64748b" style={{ marginRight: 4 }} />
                                         <ThemedText style={styles.statValue}>
                                             {formatValue(setPointTemp, "°C")}
+                                        </ThemedText>
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View style={styles.statsGrid}>
+                                <View style={styles.statBox}>
+                                    <ThemedText style={styles.statLabel}>Running Time</ThemedText>
+                                    <View style={styles.statValueContainer}>
+                                        <Clock size={16} color="#64748b" style={{ marginRight: 4 }} />
+                                        <ThemedText style={styles.statValue}>
+                                            {runningHours || 0}h {runningMinutes || 0}m
+                                        </ThemedText>
+                                    </View>
+                                </View>
+                                <View style={styles.statBox}>
+                                    <ThemedText style={styles.statLabel}>T2 (Ambient)</ThemedText>
+                                    <View style={styles.statValueContainer}>
+                                        <Thermometer size={16} color="#64748b" style={{ marginRight: 4 }} />
+                                        <ThemedText style={styles.statValue}>
+                                            {formatValue(ambientTemp, "°C")}
                                         </ThemedText>
                                     </View>
                                 </View>
@@ -269,14 +248,131 @@ export default function AerationScreen() {
                                         style={[
                                             styles.progressBarFill,
                                             { 
-                                                width: `${withHeatingProgress}%`,
-                                                backgroundColor: isWithHeatRunning ? '#f59e0b' : '#0ea5e9'
+                                                width: `${runningTimeProgress}%`,
+                                                backgroundColor: isAnyRunning ? '#10b981' : '#0ea5e9'
                                             }
                                         ]}
                                     />
                                 </View>
                             </View>
                         </TouchableOpacity>
+                    ) : (
+                        // Dual Aeration Cards for specified devices
+                        <>
+                            {/* Aeration Without Heating Card */}
+                            <TouchableOpacity 
+                                style={[
+                                    styles.aerationCard,
+                                    { backgroundColor: effective === 'dark' ? '#1e293b' : '#ffffff' },
+                                    isWithoutHeatRunning && styles.activeCard
+                                ]}
+                            >
+                                <View style={styles.cardHeader}>
+                                    <Wind size={24} color={isWithoutHeatRunning ? '#10b981' : '#64748b'} />
+                                    <ThemedText style={[styles.cardTitle, isWithoutHeatRunning && styles.activeTitle]}>
+                                        AERATION WITHOUT HEATING
+                                    </ThemedText>
+                                    {isWithoutHeatRunning && (
+                                        <View style={styles.runningBadge}>
+                                            <View style={styles.runningDot} />
+                                            <ThemedText style={styles.runningText}>RUNNING</ThemedText>
+                                        </View>
+                                    )}
+                                </View>
+
+                                <View style={styles.statsGrid}>
+                                    <View style={styles.statBox}>
+                                        <ThemedText style={styles.statLabel}>Running Time</ThemedText>
+                                        <View style={styles.statValueContainer}>
+                                            <Clock size={16} color="#64748b" style={{ marginRight: 4 }} />
+                                            <ThemedText style={styles.statValue}>
+                                                {runningHours || 0}h {runningMinutes || 0}m
+                                            </ThemedText>
+                                        </View>
+                                    </View>
+                                    <View style={styles.statBox}>
+                                        <ThemedText style={styles.statLabel}>Set Duration</ThemedText>
+                                        <View style={styles.statValueContainer}>
+                                            <Activity size={16} color="#64748b" style={{ marginRight: 4 }} />
+                                            <ThemedText style={styles.statValue}>
+                                                {duration || 0}h
+                                            </ThemedText>
+                                        </View>
+                                    </View>
+                                </View>
+
+                                <View style={styles.progressContainer}>
+                                    <View style={styles.progressBarBg}>
+                                        <View
+                                            style={[
+                                                styles.progressBarFill,
+                                                { 
+                                                    width: `${withoutHeatingProgress}%`,
+                                                    backgroundColor: isWithoutHeatRunning ? '#10b981' : '#0ea5e9'
+                                                }
+                                            ]}
+                                        />
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+
+                            {/* Aeration With Heating Card */}
+                            <TouchableOpacity 
+                                style={[
+                                    styles.aerationCard,
+                                    { backgroundColor: effective === 'dark' ? '#1e293b' : '#ffffff' },
+                                    isWithHeatRunning && styles.activeCard
+                                ]}
+                            >
+                                <View style={styles.cardHeader}>
+                                    <Thermometer size={24} color={isWithHeatRunning ? '#f59e0b' : '#64748b'} />
+                                    <ThemedText style={[styles.cardTitle, isWithHeatRunning && styles.activeTitle]}>
+                                        AERATION WITH HEATING
+                                    </ThemedText>
+                                    {isWithHeatRunning && (
+                                        <View style={styles.runningBadge}>
+                                            <View style={styles.runningDot} />
+                                            <ThemedText style={styles.runningText}>RUNNING</ThemedText>
+                                        </View>
+                                    )}
+                                </View>
+
+                                <View style={styles.statsGrid}>
+                                    <View style={styles.statBox}>
+                                        <ThemedText style={styles.statLabel}>Heater Temp</ThemedText>
+                                        <View style={styles.statValueContainer}>
+                                            <Thermometer size={16} color="#64748b" style={{ marginRight: 4 }} />
+                                            <ThemedText style={styles.statValue}>
+                                                {formatValue(afterHeatTemp, "°C")}
+                                            </ThemedText>
+                                        </View>
+                                    </View>
+                                    <View style={styles.statBox}>
+                                        <ThemedText style={styles.statLabel}>Set Point</ThemedText>
+                                        <View style={styles.statValueContainer}>
+                                            <Activity size={16} color="#64748b" style={{ marginRight: 4 }} />
+                                            <ThemedText style={styles.statValue}>
+                                                {formatValue(setPointTemp, "°C")}
+                                            </ThemedText>
+                                        </View>
+                                    </View>
+                                </View>
+
+                                <View style={styles.progressContainer}>
+                                    <View style={styles.progressBarBg}>
+                                        <View
+                                            style={[
+                                                styles.progressBarFill,
+                                                { 
+                                                    width: `${withHeatingProgress}%`,
+                                                    backgroundColor: isWithHeatRunning ? '#f59e0b' : '#0ea5e9'
+                                                }
+                                            ]}
+                                        />
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        </>
                     )}
                 </View>
 
@@ -337,7 +433,7 @@ export default function AerationScreen() {
                 {/* Temperature and Controls Card */}
                 <View style={styles.tempControlCard}>
                     <ThemedText style={styles.controlCardTitle}>Temperature & Controls</ThemedText>
-                    
+                                        
                     {/* After Heat Temperature */}
                     <View style={styles.tempRow}>
                         <View style={styles.tempLabelContainer}>
@@ -350,7 +446,7 @@ export default function AerationScreen() {
                             {formatValue(afterHeatTemp, "°C")}
                         </ThemedText>
                     </View>
-
+                
                     {/* Ambient Temperature */}
                     <View style={styles.tempRow}>
                         <View style={styles.tempLabelContainer}>
@@ -361,7 +457,7 @@ export default function AerationScreen() {
                             {formatValue(ambientTemp, "°C")}
                         </ThemedText>
                     </View>
-
+                
                     {/* Blower Speed with Progress Bar */}
                     <View style={styles.controlProgressRow}>
                         <View style={styles.controlLabelContainer}>
@@ -385,92 +481,27 @@ export default function AerationScreen() {
                             </View>
                         </View>
                     </View>
-
-                    {/* Heater Speed with Progress Bar */}
-                    <View style={styles.controlProgressRow}>
-                        <View style={styles.controlLabelContainer}>
-                            <Thermometer size={16} color="#f59e0b" />
-                            <ThemedText style={styles.controlLabel}>HEATER</ThemedText>
-                        </View>
-                        <View style={styles.progressContainer}>
-                            <ThemedText style={styles.progressValue}>
-                                {formatValue(heaterSpeed, "%")}
-                            </ThemedText>
-                            <View style={styles.progressBarBg}>
-                                <View
-                                    style={[
-                                        styles.progressBarFill,
-                                        { 
-                                            width: `${heaterProgress}%`,
-                                            backgroundColor: '#f59e0b'
-                                        }
-                                    ]}
-                                />
+                
+                    {/* Heater Status - Only show for heater-enabled devices */}
+                    {shouldShowHeaters && (
+                        <View style={styles.tempRow}>
+                            <View style={styles.tempLabelContainer}>
+                                <Thermometer size={16} color="#f59e0b" />
+                                <ThemedText style={styles.controlLabel}>HEATER</ThemedText>
                             </View>
+                            <ThemedText style={[
+                                styles.tempValue,
+                                {
+                                    color: (heaterSpeed === 'tr' || heaterSpeed === true || parseFloat(heaterSpeed as any) > 0) ? '#10b981' : '#ef4444'
+                                }
+                            ]}>
+                                {(heaterSpeed === 'tr' || heaterSpeed === true || parseFloat(heaterSpeed as any) > 0) ? 'ON' : 'OFF'}
+                            </ThemedText>
                         </View>
-                    </View>
-                </View>
-
-                {/* Action Buttons */}
-                <View style={styles.actionSection}>
-                    {shouldShowWithoutHeatingOnly ? (
-                        // Only show control for "Without Heating" mode
-                        <TouchableOpacity
-                            style={[
-                                styles.controlButton,
-                                { backgroundColor: isWithoutHeatRunning ? '#ef4444' : '#0ea5e9' }
-                            ]}
-                        >
-                            {isWithoutHeatRunning ? (
-                                <>
-                                    <Timer size={24} color="#ffffff" />
-                                    <ThemedText style={styles.controlButtonText}>
-                                        AERATION STOP
-                                    </ThemedText>
-                                </>
-                            ) : (
-                                <>
-                                    <Wind size={24} color="#ffffff" />
-                                    <ThemedText style={styles.controlButtonText}>
-                                        AERATION START
-                                    </ThemedText>
-                                </>
-                            )}
-                        </TouchableOpacity>
-                    ) : (
-                        // Show combined control for both modes
-                        <TouchableOpacity
-                            style={[
-                                styles.controlButton,
-                                { backgroundColor: isAnyRunning ? '#ef4444' : '#0ea5e9' }
-                            ]}
-                        >
-                            {isAnyRunning ? (
-                                <>
-                                    <Timer size={24} color="#ffffff" />
-                                    <ThemedText style={styles.controlButtonText}>
-                                        AERATION STOP
-                                    </ThemedText>
-                                </>
-                            ) : (
-                                <>
-                                    <Wind size={24} color="#ffffff" />
-                                    <ThemedText style={styles.controlButtonText}>
-                                        AERATION START
-                                    </ThemedText>
-                                </>
-                            )}
-                        </TouchableOpacity>
                     )}
-
-                    {/* Back Button */}
-                    <TouchableOpacity
-                        style={styles.backButtonContainer}
-                        onPress={handleBack}
-                    >
-                        <ThemedText style={styles.backButtonText}>BACK</ThemedText>
-                    </TouchableOpacity>
                 </View>
+
+           
 
                 {error && (
                     <View style={styles.errorContainer}>

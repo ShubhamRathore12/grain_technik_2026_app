@@ -7,7 +7,7 @@ export default function MenuLayout() {
     return (
         <Stack
             screenOptions={{
-                headerShown: true,
+                headerShown: false,
                 headerStyle: {
                     backgroundColor: effective === 'dark' ? '#0f172a' : '#ffffff',
                 },
@@ -22,7 +22,9 @@ export default function MenuLayout() {
         >
             <Stack.Screen
                 name="[device]/index"
+                
                 options={{
+                    
                     title: 'Device Menu',
                     headerBackTitle: 'Devices',
                 }}
