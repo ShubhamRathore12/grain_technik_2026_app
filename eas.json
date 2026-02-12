@@ -1,8 +1,19 @@
 {
   "build": {
+    "development": {
+      "android": {
+        "buildType": "apk",
+        "distribution": "internal"
+      },
+      "developmentClient": true,
+      "env": {
+        "EXPO_DEBUG": "1"
+      }
+    },
     "preview": {
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "distribution": "internal"
       }
     },
     "production": {
@@ -10,5 +21,8 @@
         "buildType": "apk"
       }
     }
+  },
+  "submit": {
+    "production": {}
   }
 }

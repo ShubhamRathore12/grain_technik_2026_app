@@ -2,25 +2,57 @@ import { apiService } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
+// Storage keys
+const AUTH_TOKEN_KEY = 'auth_token';
+const USER_DATA_KEY = 'user_data';
+
 // Utility function to safely store values in AsyncStorage
 const safeStoreItem = async (key: string, value: any) => {
-  if (value === null || value === undefined || value === 'undefined') {
-    await AsyncStorage.removeItem(key);
-    return;
+  try {
+    if (value === null || value === undefined) {
+      await AsyncStorage.removeItem(key);
+      return;
+    }
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    await AsyncStorage.setItem(key, stringValue);
+  } catch (error) {
+    console.error('Error storing item:', error);
   }
-  
-  const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-  await AsyncStorage.setItem(key, stringValue);
+};
+
+// Utility function to safely get and parse values from AsyncStorage
+const safeGetItem = async <T>(key: string, defaultValue: T): Promise<T> => {
+  try {
+    const value = await AsyncStorage.getItem(key);
+    if (value === null || value === undefined || value === 'undefined') {
+      return defaultValue;
+    }
+    // Try to parse as JSON, if it fails, return the string value
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value as unknown as T;
+    }
+  } catch (error) {
+    console.error(`Error getting ${key}:`, error);
+    return defaultValue;
+  }
 };
 
 interface User {
-  id: string;
+  id: string | number;
   username: string;
   email: string;
-  role: string;
+  role?: string;
   firstName?: string;
   lastName?: string;
   name?: string;
+  accountType?: string;
+  phoneNumber?: string;
+  company?: string;
+  monitorAccess?: string;
+  created_at?: string;
+  location?: string | null;
 }
 
 interface AuthContextType {
@@ -32,7 +64,7 @@ interface AuthContextType {
   getFullLoginResponse: () => Promise<any>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -55,75 +87,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
-      const userData = await AsyncStorage.getItem('user_data');
-      const loginTimestamp = await AsyncStorage.getItem('login_timestamp');
+      console.log('Checking auth status...');
       
-      if (token && token !== 'undefined' && userData && userData !== 'undefined') {
-        // Check if 12 hours have passed since login (12 hours = 12 * 60 * 60 * 1000 milliseconds)
-        const twelveHoursInMs = 12 * 60 * 60 * 1000;
-        
-        if (loginTimestamp) {
-          const currentTime = Date.now();
-          const timeElapsed = currentTime - parseInt(loginTimestamp, 10);
-          
-          if (timeElapsed < twelveHoursInMs) {
-            // User is still within 12-hour window
-            setIsAuthenticated(true);
-            try {
-              const parsedUserData = JSON.parse(userData);
-              setUser(parsedUserData);
-            } catch (parseError) {
-              console.error('Error parsing stored user data:', parseError);
-              // Clear corrupted data
-              await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
-            }
-          } else {
-            // 12 hours have passed, clear auth data
-            await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
-          }
-        } else {
-          // No timestamp found, treat as expired
-          await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
+      // Get token and user data safely
+      const token = await safeGetItem<string | null>(AUTH_TOKEN_KEY, null);
+      const userData = await safeGetItem<any>(USER_DATA_KEY, null);
+
+      console.log('Stored data - token:', !!token, 'user:', !!userData);
+
+      if (token) {
+        console.log('Valid token found, setting authenticated');
+        setIsAuthenticated(true);
+        if (userData) {
+          setUser(userData);
+          console.log('User data set successfully');
         }
+      } else {
+        console.log('No valid auth token found');
+        setIsAuthenticated(false);
+        setUser(null);
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
       // Clear any corrupted data
-      await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
+      try {
+        await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
+      } catch (clearError) {
+        console.error('Error clearing auth data:', clearError);
+      }
+      setIsAuthenticated(false);
+      setUser(null);
     } finally {
+      console.log('Auth check complete, setting loading to false');
       setLoading(false);
     }
   };
 
   const login = async (credentials: { username: string; password: string }) => {
+    console.log('Starting login process...');
     setLoading(true);
-    
+
     try {
       // Call the API login endpoint
+      console.log('Calling login API...');
       const response = await apiService.login(credentials);
-      
+      console.log('Login API response:', response);
+
       // Extract token and user data from response
       const { token, user: userData } = response;
-      
-      // If no token exists, try to use firstName from user data as token equivalent
-      const authValue = token || (userData && (userData as any)?.firstName) || (userData && (userData as any)?.name) || null;
-      
+
+      // If no token exists, try to use firstName or username from user data as token equivalent
+      const authValue = token || (userData && (userData as any)?.firstName) || (userData && (userData as any)?.username) || (userData && (userData as any)?.name) || null;
+
+      console.log('Final Auth value determined:', authValue);
+      console.log('Final User data to be stored:', userData);
+
       if (!authValue) {
-        throw new Error('Login failed: No authentication token or user identifier received from server');
+        throw new Error('Login failed: The server response did not contain an authentication token or a valid user identifier.');
       }
-      
+
       // Store auth data in AsyncStorage using safe storage
-      await safeStoreItem('auth_token', authValue);
-      await safeStoreItem('user_data', userData);
-      // Store the complete login response
-      await safeStoreItem('full_login_response', response);
-      // Store login timestamp
-      await safeStoreItem('login_timestamp', Date.now().toString());
-      
-      // Update state
+      console.log('Commencing safe storage of auth data...');
+      await safeStoreItem(AUTH_TOKEN_KEY, authValue);
+      await safeStoreItem(USER_DATA_KEY, userData);
+
+      // Update state - ensure both are set before proceeding
+      console.log('Setting authentication state...');
       setIsAuthenticated(true);
       setUser(userData);
+      
+      // Small delay to ensure state is properly synchronized on Android
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('Login process completed successfully');
     } catch (error: any) {
       console.error('Login error:', error);
       // Throw the error to be caught by the UI
@@ -143,26 +179,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Get the current token to call logout API
       const token = await AsyncStorage.getItem('auth_token');
-      
+
       // Note: No validate token API available
       // Proceed with local logout only
-      
+
       // Clear stored data
-      await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
-      
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
+
       setIsAuthenticated(false);
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
       // Clear local storage
-      await AsyncStorage.multiRemove(['auth_token', 'user_data', 'login_timestamp', 'full_login_response']);
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
       setIsAuthenticated(false);
       setUser(null);
     }
   };
 
+  const value = React.useMemo(() => ({
+    isAuthenticated,
+    user,
+    login,
+    logout,
+    loading,
+    getFullLoginResponse
+  }), [isAuthenticated, user, loading]);
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, loading, getFullLoginResponse }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

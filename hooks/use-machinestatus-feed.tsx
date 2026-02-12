@@ -27,6 +27,7 @@ type MachineStatus = {
 };
 
 export const useMachineStatusFeed = () => {
+  console.log('useMachineStatusFeed hook initializing...');
   const [status, setStatus] = useState<MachineStatus>({
     overallMachineStatus: false,
     overallCoolingStatus: false,
@@ -36,6 +37,7 @@ export const useMachineStatusFeed = () => {
     dataChanged: {},
     machines: [],
   });
+  
 
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<MessageLog[]>([]);
@@ -163,6 +165,7 @@ export const useMachineStatusFeed = () => {
   }, [addMessage]); // Removed setStatus and setIsConnected from dependencies
 
   const startPolling = useCallback(() => {
+    console.log('Starting polling...');
     // Clear existing interval if any
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -172,6 +175,7 @@ export const useMachineStatusFeed = () => {
     fetchData();
     intervalRef.current = setInterval(fetchData, 18 * 1000);
     addMessage("Polling started (18 second interval)", "info");
+    console.log('Polling started successfully');
   }, [fetchData, addMessage]);
 
   const stopPolling = useCallback(() => {

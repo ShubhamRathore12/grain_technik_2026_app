@@ -10,13 +10,19 @@ interface LoginResponse {
   token?: string;
   refreshToken?: string;
   user: {
-    id: string;
+    id: string | number;
     username: string;
     email: string;
-    role: string;
+    role?: string;
     firstName?: string;
     lastName?: string;
     name?: string;
+    accountType?: string;
+    phoneNumber?: string;
+    company?: string;
+    monitorAccess?: string;
+    created_at?: string;
+    location?: string | null;
   };
 }
 
@@ -30,7 +36,7 @@ export interface DeviceStatus {
 
 class ApiService {
   private baseUrl: string;
-  
+
   constructor() {
     this.baseUrl = BASE_URL;
   }
@@ -45,16 +51,17 @@ class ApiService {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     return headers;
   }
 
   // Login API call
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    console.log('API Service: Starting login request...', credentials);
     try {
       const response = await fetch(`${this.baseUrl}/api/login`, {
         method: 'POST',
@@ -64,6 +71,7 @@ class ApiService {
           password: credentials.password,
         }),
       });
+      console.log('API Service: Login response received, status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -71,6 +79,7 @@ class ApiService {
       }
 
       const data: LoginResponse = await response.json();
+      console.log('API Service: Login response data:', data);
       return data;
     } catch (error) {
       console.error('Login API error:', error);

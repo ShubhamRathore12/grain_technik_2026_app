@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 import { useColorScheme as useRNColorScheme } from 'react-native';
 
-type Mode = 'light' | 'dark' | 'system';
+export type Mode = 'light' | 'dark' | 'system';
 
 // Define theme tokens
 interface ThemeTokens {

@@ -13,21 +13,15 @@ import {
   Sun,
   User
 } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Animated,
-  Dimensions,
-  Easing,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-
-const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const { login, loading } = useAuth();
@@ -42,71 +36,6 @@ export default function LoginScreen() {
     username: '',
     password: ''
   });
-  const [isValid, setIsValid] = useState(false);
-
-  // Animation values
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(30));
-  const [bgScale] = useState(new Animated.Value(1));
-  const [particles] = useState(Array.from({ length: 20 }, () => ({
-    x: new Animated.Value(Math.random() * width),
-    y: new Animated.Value(Math.random() * height),
-    size: Math.random() * 20 + 10,
-    speed: Math.random() * 2 + 1,
-  })));
-
-  useEffect(() => {
-    // Entry animations
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Background pulse animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(bgScale, {
-          toValue: 1.05,
-          duration: 4000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(bgScale, {
-          toValue: 1,
-          duration: 4000,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // Floating particles animation
-    particles.forEach((particle) => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(particle.y, {
-            toValue: Math.random() * height,
-            duration: 8000 * particle.speed,
-            useNativeDriver: true,
-          }),
-          Animated.timing(particle.x, {
-            toValue: Math.random() * width,
-            duration: 8000 * particle.speed,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    });
-  }, []);
 
   const validateUsername = (username: string) => {
     // Username validation - at least 3 characters, alphanumeric with underscores/dots
@@ -159,28 +88,22 @@ export default function LoginScreen() {
     // Haptic feedback on button press
     mediumHaptic();
 
-    // Add button press animation
-    Animated.sequence([
-      Animated.timing(bgScale, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(bgScale, {
-        toValue: 1.02,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
     try {
-      await login({ username, password });
+      console.log('Login attempt starting...');
+      const trimmedUsername = username.trim();
+      const trimmedPassword = password.trim();
+
+      console.log('Calling login with credentials:', { username: trimmedUsername });
+      await login({ username: trimmedUsername, password: trimmedPassword });
+      console.log('Login successful, navigating to devices');
+      
+      // Navigate to devices page
       router.replace('/(tabs)/devices');
     } catch (error: any) {
       Toast.show({
         type: 'error',
         text1: 'Login Failed',
-        text2: error.message || 'An error occurred during login',
+        text2: error.message || 'Invalid username or password',
         position: 'top',
         visibilityTime: 4000,
         autoHide: true,
@@ -194,37 +117,11 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Animated Background */}
-      <Animated.View
-        style={[
-          styles.background,
-          {
-            transform: [{ scale: bgScale }],
-            backgroundColor: effective === 'dark' ? '#0f172a' : '#f8fafc',
-          },
-        ]}
-      >
-        {/* Animated Particles */}
-        {particles.map((particle, index) => (
-          <Animated.View
-            key={index}
-            style={[
-              styles.particle,
-              {
-                transform: [
-                  { translateX: particle.x },
-                  { translateY: particle.y }
-                ],
-                width: particle.size,
-                height: particle.size,
-                backgroundColor: effective === 'dark'
-                  ? `rgba(59, 130, 246, ${0.1 + particle.size / 100})`
-                  : `rgba(59, 130, 246, ${0.05 + particle.size / 200})`,
-              },
-            ]}
-          />
-        ))}
-      </Animated.View>
+      {/* Simple Background */}
+      <View style={[
+        styles.background,
+        { backgroundColor: effective === 'dark' ? '#0f172a' : '#f8fafc' }
+      ]} />
 
       {/* Header with controls */}
       <View style={styles.header}>
@@ -258,15 +155,8 @@ export default function LoginScreen() {
       </View>
 
       {/* Main Content */}
-      <Animated.View
-        style={[
-          styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
-      >
+      <View style={styles.content}>
+
         <View style={styles.logoContainer}>
           <View style={[styles.logo, { backgroundColor: effective === 'dark' ? '#1e293b' : '#e2e8f0' }]}>
             <Lock size={36} color={effective === 'dark' ? '#60a5fa' : '#3b82f6'} />
@@ -290,6 +180,8 @@ export default function LoginScreen() {
               placeholderTextColor={effective === 'dark' ? '#64748b' : '#94a3b8'}
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="username"
+              textContentType="username"
               style={[
                 styles.input,
                 {
@@ -321,6 +213,9 @@ export default function LoginScreen() {
               placeholder={t('password') || 'Password'}
               placeholderTextColor={effective === 'dark' ? '#64748b' : '#94a3b8'}
               secureTextEntry={secure}
+              autoCapitalize="none"
+              autoComplete="password"
+              textContentType="password"
               style={[
                 styles.input,
                 {
@@ -396,172 +291,8 @@ export default function LoginScreen() {
             {t('Prosafe Automation') || '© 2024 Your App. All rights reserved.'}
           </Text>
         </View>
-      </Animated.View>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    position: 'relative',
-  },
-  background: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  particle: {
-    position: 'absolute',
-    borderRadius: 50,
-    opacity: 0.4,
-  },
-  header: {
-    position: 'absolute',
-    top: 50,
-    right: 24,
-    zIndex: 10,
-  },
-  headerControls: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  iconButtonDark: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  localeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    maxWidth: 280,
-  },
-  form: {
-    gap: 20,
-  },
-  inputContainer: {
-    position: 'relative',
-  },
-  inputIcon: {
-    position: 'absolute',
-    left: 16,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    zIndex: 1,
-  },
-  input: {
-    borderRadius: 16,
-    paddingHorizontal: 52,
-    paddingVertical: 18,
-    fontSize: 16,
-    fontWeight: '500',
-    borderWidth: 2,
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: 16,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    zIndex: 1,
-  },
-  button: {
-    backgroundColor: '#3b82f6',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-    shadowColor: '#3b82f6',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  linksContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 16,
-    marginTop: 8,
-  },
-  linkButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  linkText: {
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  divider: {
-    width: 1,
-    height: 16,
-    backgroundColor: '#cbd5e1',
-  },
-  errorText: {
-    color: '#ef4444',
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 16,
-  },
-  footer: {
-    marginTop: 40,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 12,
-    textAlign: 'center',
-  },
-});

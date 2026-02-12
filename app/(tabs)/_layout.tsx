@@ -1,42 +1,42 @@
-import { Tabs, router } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import { Cpu, FileText, Globe, LogOut, Moon, Sun, User, UserPlus } from 'lucide-react-native';
-import React from 'react';
+import React, { useContext } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useI18n } from '@/i18n';
-import { useAuth } from '@/providers/auth';
-import { useThemeMode } from '@/providers/theme';
+import { Locale, useI18n } from '@/i18n';
+import { AuthContext } from '@/providers/auth';
+import { Mode, useThemeMode } from '@/providers/theme';
 
 // Extracted Header Actions Component
-const HeaderActions = ({ 
-  mode, 
-  setMode, 
-  locale, 
-  setLocale, 
-  onLogout, 
-  tintColor, 
-  effective, 
-  t 
+const HeaderActions = ({
+  mode,
+  setMode,
+  locale,
+  setLocale,
+  onLogout,
+  tintColor,
+  effective,
+  t
 }: {
-  mode: string;
-  setMode: (mode: 'light' | 'dark') => void;
-  locale: string;
-  setLocale: (locale: string) => void;
+  mode: Mode;
+  setMode: (mode: Mode) => void;
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
   onLogout: () => void;
   tintColor: string;
   effective: 'light' | 'dark';
   t: (key: string) => string;
 }) => {
   const iconSize = 22;
-  
+
   return (
     <View style={styles.headerActionsContainer}>
       {/* Theme Toggle */}
-      <TouchableOpacity 
-        onPress={() => setMode(mode === 'dark' ? 'light' : 'dark')} 
+      <TouchableOpacity
+        onPress={() => setMode(mode === 'dark' ? 'light' : 'dark')}
         style={[
           styles.headerButton,
           { backgroundColor: effective === 'dark' ? '#1e293b' : '#f1f5f9' }
@@ -50,10 +50,10 @@ const HeaderActions = ({
           <Moon size={iconSize} color={tintColor} />
         )}
       </TouchableOpacity>
-      
+
       {/* Language Toggle */}
-      <TouchableOpacity 
-        onPress={() => setLocale(locale === 'en' ? 'de' : 'en')} 
+      <TouchableOpacity
+        onPress={() => setLocale(locale === 'en' ? 'de' : 'en')}
         style={[
           styles.headerButton,
           styles.languageButton,
@@ -67,10 +67,10 @@ const HeaderActions = ({
           {locale.toUpperCase()}
         </Text>
       </TouchableOpacity>
-      
+
       {/* Logout Button */}
-      <TouchableOpacity 
-        onPress={onLogout} 
+      <TouchableOpacity
+        onPress={onLogout}
         style={[
           styles.headerButton,
           styles.logoutButton,
@@ -87,18 +87,28 @@ const HeaderActions = ({
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { logout } = useAuth();
+  const auth = useContext(AuthContext);
+
+  if (!auth) {
+    return null; // Prevent crash if rendered outside provider
+  }
+
+  const { logout } = auth;
   const { t, locale, setLocale } = useI18n();
   const { mode, setMode, effective } = useThemeMode();
-  
+
   const tintColor = Colors[effective ?? 'light'].tint;
   const tabIconSize = 24;
 
   // Handle logout with confirmation and proper error handling
-  const handleLogout =  () => {
-     router.replace('/login');
-     localStorage.clear()
-     sessionStorage.clear()
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/(auth)/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      router.replace('/(auth)/login');
+    }
   };
 
   return (
@@ -143,7 +153,7 @@ export default function TabLayout() {
           tabBarAccessibilityLabel: t('devices'),
         }}
       />
-      
+
       {/* Reports Tab */}
       <Tabs.Screen
         name="reports"

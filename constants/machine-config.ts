@@ -511,6 +511,16 @@ export const MACHINE_CONFIG: Record<string, MachineConfig> = {
         tags: GTPL_139_TAGS,
         type: "S7-1200",
     },
+    "GTPL-142-gT-450AP-S7-1200": {
+        table: "GTPL_142_GT450AP",
+        tags: GPL_132_TAGS,
+        type: "S7-1200",
+    },
+    "GTPL-143-gT-450AP-S7-1200": {
+        table: "GTPL_143_GT450AP",
+        tags: GPL_132_TAGS,
+        type: "S7-1200",
+    },
 };
 
 export const AUTO_TYPE_TO_TABLE_MAP: Record<string, string> = Object.fromEntries(
@@ -544,4 +554,6 @@ export const DEVICE_NAME_TO_STATUS_KEY: Record<string, string> = {
     "GTPL-135-gT-450T-S7-1200": "GTPL_135",
     "GTPL-061-gT-450T-S7-1200": "GTPL_061",
     "GTPL-139-GT-300AP-S7-1200": "GTPL_139",
+    "GTPL-142-gT-450AP-S7-1200": "GTPL_142",
+    "GTPL-143-gT-450AP-S7-1200": "GTPL_143",
 };

@@ -1,4 +1,3 @@
-import LoadingScreen from '@/components/loading-screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import AnimatedButton from '@/components/ui/animated-button';
@@ -6,7 +5,6 @@ import AnimatedCard from '@/components/ui/animated-card';
 import AnimatedText from '@/components/ui/animated-text';
 import { useMachineStatusFeed } from '@/hooks/use-machinestatus-feed';
 import { useI18n } from '@/i18n';
-import { useAuth } from '@/providers/auth';
 import { useThemeMode, useThemeTokens } from '@/providers/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
@@ -416,6 +414,7 @@ const locations = React.useMemo(() => {
 const companies = ['Grain Technik'];
 
 export default function DevicesScreen() {
+  console.log('DevicesScreen component mounting...');
   const router = useRouter();
   const { effective } = useThemeMode();
   const tokens = useThemeTokens();
@@ -423,10 +422,11 @@ export default function DevicesScreen() {
   const navigation = useNavigation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+
   const { status: machineStatus, isConnected, error: statusError, refresh: refreshStatus } = useMachineStatusFeed();
   const [statusLoading, setStatusLoading] = useState(true);
   const deviceStatuses = machineStatus?.machines || [];
+
 
   // Update loading state when machine status is initially loaded
   useEffect(() => {
@@ -435,22 +435,9 @@ export default function DevicesScreen() {
     }
   }, [deviceStatuses.length]);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace('/(auth)/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
 
-  // Show loading screen while checking authentication
-  if (authLoading) {
-    return <LoadingScreen />;
-  }
 
-  // Don't render content if not authenticated
-  if (!isAuthenticated) {
-    return null;
-  }
+
 
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
@@ -499,6 +486,14 @@ export default function DevicesScreen() {
   // Function to get device status
   const getDeviceStatus = (deviceName: string) => {
     const key = deviceNameToStatusKey[deviceName];
+    if (!key) {
+      return {
+        machineStatus: false,
+        internetStatus: false,
+        coolingStatus: false,
+        hasNewData: false,
+      };
+    }
     const deviceStatus = deviceStatuses.find((m: any) => m.machineName === key);
 
     return {
@@ -511,6 +506,15 @@ export default function DevicesScreen() {
 
   // Map devices with their status - memoized for performance
   const devicesWithStatus = React.useMemo(() => {
+    if (!Array.isArray(deviceStatuses)) {
+      return allDevices.map((device: Device) => ({
+        ...device,
+        status: 'inactive' as const,
+        internetStatus: false,
+        coolingStatus: false,
+      }));
+    }
+    
     return allDevices.map((device: Device) => {
       const deviceStatus = getDeviceStatus(device.name);
 
