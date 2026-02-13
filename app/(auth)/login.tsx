@@ -2,7 +2,6 @@ import { useI18n } from '@/i18n';
 import { useAuth } from '@/providers/auth';
 import { useThemeMode } from '@/providers/theme';
 import { lightHaptic, mediumHaptic } from '@/utils/haptic-utils';
-import { useRouter } from 'expo-router';
 import {
   ChevronRight,
   Eye,
@@ -16,6 +15,7 @@ import {
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -25,7 +25,6 @@ import Toast from 'react-native-toast-message';
 
 export default function LoginScreen() {
   const { login, loading } = useAuth();
-  const router = useRouter();
   const { effective, mode, setMode } = useThemeMode();
   const { locale, setLocale, t } = useI18n();
 
@@ -95,10 +94,7 @@ export default function LoginScreen() {
 
       console.log('Calling login with credentials:', { username: trimmedUsername });
       await login({ username: trimmedUsername, password: trimmedPassword });
-      console.log('Login successful, navigating to devices');
-      
-      // Navigate to devices page
-      router.replace('/(tabs)/devices');
+      console.log('Login successful — auth state will trigger redirect');
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -296,3 +292,141 @@ export default function LoginScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  background: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 24,
+    alignItems: 'flex-end',
+  },
+  headerControls: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  iconButtonDark: {
+    backgroundColor: '#1e293b',
+    borderColor: '#334155',
+  },
+  localeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  form: {
+    gap: 12,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: 14,
+    zIndex: 1,
+  },
+  input: {
+    flex: 1,
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingLeft: 44,
+    paddingRight: 14,
+    fontSize: 16,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 14,
+    padding: 4,
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 13,
+    marginLeft: 4,
+    marginTop: -4,
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#3b82f6',
+    marginTop: 8,
+    gap: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  linksContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  linkButton: {
+    padding: 8,
+  },
+  linkText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  divider: {
+    width: 1,
+    height: 16,
+    backgroundColor: '#cbd5e1',
+    marginHorizontal: 8,
+  },
+  footer: {
+    alignItems: 'center',
+    paddingBottom: 32,
+    paddingTop: 16,
+  },
+  footerText: {
+    fontSize: 13,
+  },
+});

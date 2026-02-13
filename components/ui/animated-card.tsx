@@ -30,6 +30,7 @@ interface AnimatedCardProps {
 }
 
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const AnimatedCard: React.FC<AnimatedCardProps> = ({
   children,
@@ -137,7 +138,6 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
   const defaultGradientColors: [string, string, ...string[]] = gradientColors || [tokens.colors.primary, tokens.colors.accent];
 
   if (onPress) {
-    const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
     return (
       <GestureDetector gesture={panGesture}>
