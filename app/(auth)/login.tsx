@@ -16,6 +16,7 @@ import {
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -296,3 +297,62 @@ export default function LoginScreen() {
   );
 }
 
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  background: { ...StyleSheet.absoluteFillObject },
+  header: { paddingTop: 56, paddingHorizontal: 20, paddingBottom: 12 },
+  headerControls: { flexDirection: 'row', justifyContent: 'space-between' },
+  iconButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  iconButtonDark: {
+    backgroundColor: '#1e293b',
+    borderColor: '#334155',
+  },
+  localeText: { fontSize: 12, fontWeight: '700' },
+  content: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
+  logoContainer: { alignItems: 'center', marginBottom: 26 },
+  logo: { width: 82, height: 82, borderRadius: 41, alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
+  title: { fontSize: 30, fontWeight: '700', marginBottom: 6 },
+  subtitle: { fontSize: 14, textAlign: 'center' },
+  form: { gap: 12 },
+  inputContainer: { justifyContent: 'center' },
+  inputIcon: { position: 'absolute', left: 14, zIndex: 2 },
+  input: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingLeft: 46,
+    paddingRight: 46,
+    height: 54,
+    fontSize: 16,
+  },
+  eyeButton: { position: 'absolute', right: 14, padding: 4 },
+  errorText: { color: '#ef4444', fontSize: 12, marginTop: -6, marginLeft: 4 },
+  button: {
+    marginTop: 8,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: '#2563eb',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  buttonDisabled: { opacity: 0.6 },
+  buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+  linksContainer: { marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  linkButton: { paddingHorizontal: 8, paddingVertical: 6 },
+  linkText: { fontSize: 14, fontWeight: '600' },
+  divider: { width: 1, height: 14, backgroundColor: '#94a3b8', marginHorizontal: 8 },
+  footer: { marginTop: 20, alignItems: 'center' },
+  footerText: { fontSize: 12, textAlign: 'center' },
+});

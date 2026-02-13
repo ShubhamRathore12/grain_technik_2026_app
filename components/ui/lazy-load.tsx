@@ -28,11 +28,15 @@ export function withLazyLoad<P extends object>(
 ) {
     const LazyComponent = lazy(importFunc);
 
-    return (props: P) => (
+    const WrappedLazyComponent: React.FC<P> = (props) => (
         <LazyScreen>
             <LazyComponent {...props} />
         </LazyScreen>
     );
+
+    WrappedLazyComponent.displayName = 'WithLazyLoad';
+
+    return WrappedLazyComponent;
 }
 
 const styles = StyleSheet.create({
