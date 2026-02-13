@@ -21,7 +21,7 @@ const safeStoreItem = async (key: string, value: any) => {
 };
 
 // Utility function to safely get and parse values from AsyncStorage
-const safeGetItem = async <T>(key: string, defaultValue: T): Promise<T> => {
+const safeGetItem = async <T,>(key: string, defaultValue: T): Promise<T> => {
   try {
     const value = await AsyncStorage.getItem(key);
     if (value === null || value === undefined || value === 'undefined') {
@@ -160,15 +160,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       console.log('Login process completed successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
       // Throw the error to be caught by the UI
-      if (error.message.includes('401') || error.message.toLowerCase().includes('invalid') || error.message.toLowerCase().includes('unauthorized')) {
+      if (errorMessage.includes('401') || errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('unauthorized')) {
         throw new Error('Invalid email or password. Please try again.');
-      } else if (error.message.includes('Network Error')) {
+      } else if (errorMessage.includes('Network Error')) {
         throw new Error('Unable to connect to the server. Please check your internet connection.');
       } else {
-        throw new Error(error.message || 'An error occurred during login. Please try again.');
+        throw new Error(errorMessage || 'An error occurred during login. Please try again.');
       }
     } finally {
       setLoading(false);

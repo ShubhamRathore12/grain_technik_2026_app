@@ -5,7 +5,6 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Locale, useI18n } from '@/i18n';
 import { AuthContext } from '@/providers/auth';
 import { Mode, useThemeMode } from '@/providers/theme';
@@ -86,16 +85,15 @@ const HeaderActions = ({
 };
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const auth = useContext(AuthContext);
+  const { t, locale, setLocale } = useI18n();
+  const { mode, setMode, effective } = useThemeMode();
 
   if (!auth) {
     return null; // Prevent crash if rendered outside provider
   }
 
   const { logout } = auth;
-  const { t, locale, setLocale } = useI18n();
-  const { mode, setMode, effective } = useThemeMode();
 
   const tintColor = Colors[effective ?? 'light'].tint;
   const tabIconSize = 24;

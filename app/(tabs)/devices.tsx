@@ -407,7 +407,7 @@ const allDevices: Device[] = [
   },
 ];
 
-const locations = ['All', ...[...new Set(allDevices.map(device => device.location))].sort()];
+const locations = ['All', ...[...new Set(allDevices.map((device) => device.location))].sort()];
 const companies = ['Grain Technik'];
 
 export default function DevicesScreen() {
