@@ -19,10 +19,18 @@
     "production": {
       "android": {
         "buildType": "apk"
+      },
+      "node": "20.19.4",
+      "npm": "10.8.2",
+      "cache": {
+        "disabled": true
       }
     }
   },
   "submit": {
     "production": {}
+  },
+  "cli": {
+    "version": ">= 16.13.3"
   }
 }

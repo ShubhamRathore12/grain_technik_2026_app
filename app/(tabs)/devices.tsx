@@ -407,10 +407,7 @@ const allDevices: Device[] = [
   },
 ];
 
-const locations = React.useMemo(() => {
-  const uniqueLocations = [...new Set(allDevices.map(device => device.location))];
-  return ['All', ...uniqueLocations.sort()];
-}, []);
+const locations = ['All', ...[...new Set(allDevices.map((device) => device.location))].sort()];
 const companies = ['Grain Technik'];
 
 export default function DevicesScreen() {
