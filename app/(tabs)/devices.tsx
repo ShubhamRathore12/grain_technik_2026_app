@@ -405,6 +405,19 @@ const allDevices: Device[] = [
     internetStatus: true,
     coolingStatus: true,
   },
+  {
+    id: '28',
+    name: 'GTPL-123-GT-450AP',
+    type: 'chiller',
+    model: 'GT-450AP',
+    location: 'India',
+    image: 'https://imgtolinkx.com/i/tyDruPH0',
+    plc: 'S7-1200',
+    chillerModel: 'GT-450AP',
+    status: 'active',
+    internetStatus: true,
+    coolingStatus: true,
+  },
 ];
 
 const locations = ['All', ...[...new Set(allDevices.map((device) => device.location))].sort()];
@@ -477,7 +490,8 @@ export default function DevicesScreen() {
     "GTPL-061-gT-450T-S7-1200": "GTPL_061",
     "GTPL-139-GT-300AP-S7-1200": "GTPL_139",
     "GTPL-142-gT-450AP-S7-1200": "GTPL_142",
-    "GTPL-143-gT-450AP-S7-1200": "GTPL_143"
+    "GTPL-143-gT-450AP-S7-1200": "GTPL_143",
+    "GTPL-123-GT-450AP": "GTPL_123"
   };
 
   // Function to get device status

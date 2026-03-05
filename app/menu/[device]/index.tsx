@@ -46,6 +46,7 @@ const grainPaddyDevices = [
     'GTPL-139-GT-300AP-S7-1200',
     'GTPL-142-gT-450AP-S7-1200',
     'GTPL-143-gT-450AP-S7-1200',
+        "GTPL-123-GT-450AP"
 ];
 
 // Devices that should hide aeration

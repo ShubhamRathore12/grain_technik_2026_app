@@ -37,6 +37,9 @@ const getInputsConfig = (device: string, data: any) => {
     const isGTPL138 = device === "GTPL-138-GT-450T-S7-1200";
     const isGTPL061 = device === "GTPL-061-gT-450T-S7-1200";
     const isGTPL139 = device === "GTPL-139-GT-300AP-S7-1200";
+    const isGTPL142 = device === "GTPL-142-gT-450AP-S7-1200";
+    const isGTPL143 = device === "GTPL-143-gT-450AP-S7-1200";
+    const isGTPL123 = device === "GTPL-123-GT-450AP";
 
     // Helper to normalize all possible "fault" values
     const isStatusFault = (value: unknown): boolean => {
@@ -175,8 +178,8 @@ const getInputsConfig = (device: string, data: any) => {
         ];
     }
 
-    // GTPL-132 configuration
-    if (isGTPL132) {
+    // GTPL-132, GTPL-142, GTPL-143, GTPL-123 configuration
+    if (isGTPL132 || isGTPL142 || isGTPL143 || isGTPL123) {
         return [
             { id: "I0.0", description: "Compressor circuit breaker", status: isStatusFault(data?.["Compressor_circuit_breaker_I0_0"]) },
             { id: "I0.1", description: "Compressor module feedback error", status: isStatusFault(data?.["Compressor_module_feedback_error_I0_1"]) },

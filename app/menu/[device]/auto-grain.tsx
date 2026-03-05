@@ -84,6 +84,63 @@ const machineConfig = {
             lp: "LP_value",
         },
     },
+    "GTPL-142-gT-450AP-S7-1200": {
+        serialNumber: "GTPL_142_GRAIN",
+        temperatureSensors: {
+            T0: { key: "T0_temp_mean", label: "After Heat(T0)" },
+            T1: { key: "T1_temp_mean", label: "Cold Air(T1)" },
+            T2: { key: "T2_temp_mean", label: "Ambient(T2)" },
+        },
+        controls: {
+            AHT: { key: "AHT_valve_speed", label: "After Heat(AHT)" },
+            HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
+            BLOWER: { key: "Blower_speed", label: "Blower" },
+            CONDENSORFANSPEED: { key: 'Condenser_fan_speed', label: 'Cond. Fan' }
+        },
+        compressor: {
+            time: "Compressor_timer",
+            hp: "HP_value",
+            lp: "LP_value",
+        },
+    },
+    "GTPL-143-gT-450AP-S7-1200": {
+        serialNumber: "GTPL_143_GRAIN",
+        temperatureSensors: {
+            T0: { key: "T0_temp_mean", label: "After Heat(T0)" },
+            T1: { key: "T1_temp_mean", label: "Cold Air(T1)" },
+            T2: { key: "T2_temp_mean", label: "Ambient(T2)" },
+        },
+        controls: {
+            AHT: { key: "AHT_valve_speed", label: "After Heat(AHT)" },
+            HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
+            BLOWER: { key: "Blower_speed", label: "Blower" },
+            CONDENSORFANSPEED: { key: 'Condenser_fan_speed', label: 'Cond. Fan' }
+        },
+        compressor: {
+            time: "Compressor_timer",
+            hp: "HP_value",
+            lp: "LP_value",
+        },
+    },
+    "GTPL-123-GT-450AP": {
+        serialNumber: "GTPL_123_GRAIN",
+        temperatureSensors: {
+            T0: { key: "T0_temp_mean", label: "After Heat(T0)" },
+            T1: { key: "T1_temp_mean", label: "Cold Air(T1)" },
+            T2: { key: "T2_temp_mean", label: "Ambient(T2)" },
+        },
+        controls: {
+            AHT: { key: "AHT_valve_speed", label: "After Heat(AHT)" },
+            HGS: { key: "Hot_valve_speed", label: "Hot Gas(HGS)" },
+            BLOWER: { key: "Blower_speed", label: "Blower" },
+            CONDENSORFANSPEED: { key: 'Condenser_fan_speed', label: 'Cond. Fan' }
+        },
+        compressor: {
+            time: "Compressor_timer",
+            hp: "HP_value",
+            lp: "LP_value",
+        },
+    },
 };
 
 // Color mapping for different sensor types
@@ -180,11 +237,13 @@ export default function AutoGrainScreen() {
 
     const { data, isConnected, error, formatValue } = useAutoData(device || '');
 
+    // Check if grain chilling mode is active
+    const isGrainChillingMode = String(data?.Grain_chilling_mode)?.toLowerCase() === "true";
 
       // Check for special modes
   const isGrainChilling = pathname.includes("auto-grain");
   const isPaddyChilling = pathname.includes("auto-paddy");
-  const isSpecialMachine = device?.includes("GTPL-061-gT-450T-S7-1200") || device?.includes('GTPL-121-gT-1000T-S7-1200') || device?.includes('GTPL-122-gT-1000T-S7-1200') || device?.includes('GTPL-139-GT-300AP-S7-1200') || device?.includes('GTPL-142-gT-450AP-S7-1200') || device?.includes('GTPL-143-gT-450AP-S7-1200') || device?.includes('GTPL-124-GT-450T-S7-1200') || device?.includes('GTPL-131-GT-650T-S7-1200') || device?.includes('GTPL-132-300-AP-S7-1200') || device?.includes('GTPL-136-gT-450AP') || false;
+  const isSpecialMachine = device?.includes("GTPL-061-gT-450T-S7-1200") || device?.includes('GTPL-121-gT-1000T-S7-1200') || device?.includes('GTPL-122-gT-1000T-S7-1200') || device?.includes('GTPL-139-GT-300AP-S7-1200') || device?.includes('GTPL-142-gT-450AP-S7-1200') || device?.includes('GTPL-143-gT-450AP-S7-1200') || device?.includes('GTPL-124-GT-450T-S7-1200') || device?.includes('GTPL-131-GT-650T-S7-1200') || device?.includes('GTPL-132-300-AP-S7-1200') || device?.includes('GTPL-136-gT-450AP') || device?.includes('GTPL-123-GT-450AP') || false;
 
   // Get configuration for the current device
   const currentConfig = device ? 
@@ -385,9 +444,11 @@ export default function AutoGrainScreen() {
                     <ThemedText style={styles.headerSubtitle}>{device}</ThemedText>
                  
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: isConnected ? '#10b981' : '#ef4444' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: !isConnected ? '#ef4444' : (isGrainChillingMode ? '#10b981' : '#f59e0b') }]}>
                     <View style={styles.statusDot} />
-                    <ThemedText style={styles.statusText}>{isConnected ? 'LIVE' : 'OFFLINE'}</ThemedText>
+                    <ThemedText style={styles.statusText}>
+                        {!isConnected ? 'OFFLINE' : (isGrainChillingMode ? 'ACTIVE' : 'ONLINE')}
+                    </ThemedText>
                 </View>
             </View>
 

@@ -99,7 +99,7 @@ const getOutputsConfig = (deviceType: string) => {
         { id: "12", description: "Buzzer on", dataKey: "Buzzer_on_Q2_2" },
       ];
     }
-    else if (deviceType === "GTPL-132-300-AP-S7-1200") {
+    else if (deviceType === "GTPL-132-300-AP-S7-1200" || deviceType === "GTPL-142-gT-450AP-S7-1200" || deviceType === "GTPL-143-gT-450AP-S7-1200" || deviceType === "GTPL-123-GT-450AP") {
       return [
         { id: "Q0.0", description: "Compressor_on", dataKey: "Compressor_on_Q0_0" },
         { id: "Q0.1", description: "Compressor_motor_reset", dataKey: "Compressor_motor_reset_Q0_1" },
@@ -264,11 +264,7 @@ export default function OutputsScreen() {
             return value === true || value === 1 || value === "1" || value === "True" || value === "true";
         }
         
-        if (device === "GTPL-136-gT-450AP") {
-            return value === true || value === 1 || value === "1" || value === "True" || value === "true";
-        }
-
-        if (device === "GTPL-139-GT-300AP-S7-1200") {
+        if (device === "GTPL-132-300-AP-S7-1200" || device === "GTPL-142-gT-450AP-S7-1200" || device === "GTPL-143-gT-450AP-S7-1200" || device === "GTPL-123-GT-450AP") {
             return value === true || value === 1 || value === "1" || value === "True" || value === "true";
         }
 
